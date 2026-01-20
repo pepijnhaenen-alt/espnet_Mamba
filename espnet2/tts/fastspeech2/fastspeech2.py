@@ -303,7 +303,7 @@ class FastSpeech2(AbsTTS):
                 concat_after=encoder_concat_after,
                 positionwise_layer_type=positionwise_layer_type,
                 positionwise_conv_kernel_size=positionwise_conv_kernel_size,
-                apply_ff_mask=apply_ff_mask
+                apply_ff_mask=apply_ff_mask,
             )
         elif encoder_type == "conformer":
             self.encoder = ConformerEncoder(
@@ -436,6 +436,7 @@ class FastSpeech2(AbsTTS):
                 concat_after=decoder_concat_after,
                 positionwise_layer_type=positionwise_layer_type,
                 positionwise_conv_kernel_size=positionwise_conv_kernel_size,
+                apply_ff_mask=apply_ff_mask,
             )
         elif decoder_type == "conformer":
             self.decoder = ConformerEncoder(
@@ -719,8 +720,13 @@ class FastSpeech2(AbsTTS):
         if self.postnet is None:
             after_outs = before_outs
         else:
+            if h_masks is not None and before_outs.size(1) == h_masks.size(2):
+                postnet_masks = h_masks
+            else:
+                # skip masking if mismatch in length
+                postnet_masks = None
             after_outs = before_outs + self.postnet(
-                before_outs.transpose(1, 2), h_masks
+                before_outs.transpose(1, 2), postnet_masks
             ).transpose(1, 2)
 
         return before_outs, after_outs, d_outs, p_outs, e_outs
