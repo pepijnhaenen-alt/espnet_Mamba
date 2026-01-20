@@ -66,6 +66,9 @@ class DurationPredictor(torch.nn.Module):
         self.linear = torch.nn.Linear(n_chans, 1)
 
     def _forward(self, xs, x_masks=None, is_inference=False):
+        if x_masks is not None and x_masks.dim() == 2 and xs.dim() == 3:
+            # expand mask for masking
+            x_masks = x_masks.unsqueeze(-1)
         if x_masks is not None:
             xs = xs.masked_fill(x_masks, 0.0)
         xs = xs.transpose(1, -1)  # (B, idim, Tmax)

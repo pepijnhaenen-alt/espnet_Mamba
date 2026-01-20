@@ -139,6 +139,7 @@ class FastSpeech2(AbsTTS):
         init_dec_alpha: float = 1.0,
         use_masking: bool = False,
         use_weighted_masking: bool = False,
+        apply_ff_mask: bool = False,
     ):
         """Initialize FastSpeech2 module.
 
@@ -233,6 +234,7 @@ class FastSpeech2(AbsTTS):
                 calculation.
             use_weighted_masking (bool): Whether to apply weighted masking in loss
                 calculation.
+            apply_ff_mask (bool): Whether to apply mask in feed-forward layer.
 
         """
         super().__init__()
@@ -301,6 +303,7 @@ class FastSpeech2(AbsTTS):
                 concat_after=encoder_concat_after,
                 positionwise_layer_type=positionwise_layer_type,
                 positionwise_conv_kernel_size=positionwise_conv_kernel_size,
+                apply_ff_mask=apply_ff_mask
             )
         elif encoder_type == "conformer":
             self.encoder = ConformerEncoder(
@@ -663,9 +666,7 @@ class FastSpeech2(AbsTTS):
             e_outs = self.energy_predictor(hs, d_masks.unsqueeze(-1))
 
         if is_inference:
-            d_outs = self.duration_predictor.inference(
-                hs, d_masks.unsqueeze(-1)
-            )  # (B, T_text)
+            d_outs = self.duration_predictor.inference(hs, d_masks)  # (B, T_text)
             # use prediction in inference
             if p_outs.device.type == "xpu":
                 # Workaround for XPU Conv1d accuracy issue
@@ -686,7 +687,7 @@ class FastSpeech2(AbsTTS):
                 d_outs[d_masks] = 0
             hs = self.length_regulator(hs, d_outs, alpha)  # (B, T_feats, adim)
         else:
-            d_outs = self.duration_predictor(hs, d_masks.unsqueeze(-1))
+            d_outs = self.duration_predictor(hs, d_masks)
             # use groundtruth in training
             p_embs = self.pitch_embed(ps.transpose(1, 2)).transpose(1, 2)
             e_embs = self.energy_embed(es.transpose(1, 2)).transpose(1, 2)
