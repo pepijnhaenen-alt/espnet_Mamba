@@ -62,10 +62,10 @@ class MultiLayeredConv1d(torch.nn.Module):
 
         """
         if mask is not None:
-            x = x.masked_fill(~mask.transpose(-1,1), 0)
+            x = x.masked_fill(~mask.transpose(-1, 1), 0)
         x = torch.relu(self.w_1(x.transpose(-1, 1))).transpose(-1, 1)
         if mask is not None:
-            x = x.masked_fill(~mask.transpose(-1,1), 0)
+            x = x.masked_fill(~mask.transpose(-1, 1), 0)
         return self.w_2(self.dropout(x).transpose(-1, 1)).transpose(-1, 1)
 
 
