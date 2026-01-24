@@ -36,7 +36,7 @@ dependencies = [
     "soundfile>=0.10.2",
     "torch_optimizer",
     "kaldiio>=2.18.0",
-    "sentencepiece==0.2.1",
+    "sentencepiece==0.2.0",
     "librosa>=0.10.2",
     "lightning",
     "torch_complex",
