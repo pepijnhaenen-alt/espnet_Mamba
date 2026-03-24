@@ -1,0 +1,36 @@
+# asr_config.yaml
+model:
+  type: "encoder-decoder"
+  encoder:
+    type: "rnn"
+    rnn:
+      type: "lstm"  # or "gru" depending on preference
+      num_layers: 3
+      hidden_dim: 256
+      bidirectional: false  # RNNs should be unidirectional for causality
+
+  decoder:
+    type: "s4"  # State-Space model
+    s4:
+      num_layers: 2
+      hidden_dim: 256
+      output_dim: 256  # Matches the encoder's hidden size
+
+data:
+  train_"path/to/train_data"
+  valid_"path/to/valid_data"
+  test_"path/to/test_data"
+  batch_size: 32
+  num_workers: 4
+
+training:
+  epochs: 50
+  learning_rate: 0.001
+  optimizer: "adam"
+  scheduler: "step"
+  step_size: 10
+  gamma: 0.1
+
+logging:
+  log_interval: 10
+  save_dir: "./checkpoints"

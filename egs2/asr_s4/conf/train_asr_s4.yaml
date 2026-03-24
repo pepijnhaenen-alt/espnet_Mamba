@@ -1,0 +1,58 @@
+# Minimal ASR config with S4 decoder-only architecture  
+  
+# Minimal encoder (required for ASR pipeline)  
+encoder: rnn  
+encoder_conf:  
+    rnn_type: lstm  
+    bidirectional: false  
+    num_layers: 1  
+    hidden_size: 256  
+  
+# S4 Decoder configuration  
+decoder: s4  
+decoder_conf:  
+    dropout: 0.1  
+    prenorm: true  
+    n_layers: 6  
+    layer:  
+        - _name_: s4  
+          postact: glu  
+          dropout: 0.1  
+          n_ssm: 1  
+          dt_min: 0.001  
+          dt_max: 0.1  
+          measure: legs  
+        - _name_: mha  
+          n_head: 8  
+          dropout: 0.1  
+        - _name_: ff  
+          expand: 4  
+          activation: gelu  
+          dropout: 0.1  
+    residual: residual  
+    norm: layer  
+  
+# Model configuration  
+model_conf:  
+    ctc_weight: 0.0  # Disable CTC for decoder-only  
+    lsm_weight: 0.1  
+  
+# Essential training configuration  
+init: xavier_uniform  
+max_epoch: 50  
+batch_type: folded  
+batch_size: 32  
+  
+# Optimizer  
+optim: adam  
+optim_conf:  
+    lr: 0.001  
+  
+# Frontend (minimal)  
+frontend: default  
+frontend_conf:  
+    n_fft: 512  
+    hop_length: 160  
+  
+# Normalization  
+normalize: utterance_mvn

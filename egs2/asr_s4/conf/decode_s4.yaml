@@ -1,0 +1,16 @@
+# Tokenization
+token_type: bpe
+bpemodel: data/nl_token_list/bpe_unigram300/bpe.model
+
+# Beam search
+beam_size: 20
+nbest: 1
+maxlenratio: 0.0
+minlenratio: 0.0
+
+# Score weights
+ctc_weight: 0.0
+lm_weight: 0.5
+
+# Streaming
+streaming: true
