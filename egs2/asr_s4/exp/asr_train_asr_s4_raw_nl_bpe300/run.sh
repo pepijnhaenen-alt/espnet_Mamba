@@ -1,0 +1,1 @@
+./asr.sh --ngpu 1 --nbpe 300 --stage 10 --stop_stage 11 --inference_nj 0 --asr_config conf/train_asr_s4.yaml --use_lm false --lang nl --use_ngram false --token_type bpe --feats_type raw --inference_config '' --train_set training_data --valid_set val_data --test_sets test_data --bpe_train_text data/training_data/text --stage 11 "$@"; exit $?

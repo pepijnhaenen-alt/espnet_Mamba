@@ -1,0 +1,589 @@
+# python3 -m espnet2.bin.asr_train --use_preprocessor true --bpemodel data/nl_token_list/bpe_unigram300/bpe.model --token_type bpe --token_list data/nl_token_list/bpe_unigram300/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --valid_data_path_and_name_and_type dump/raw/val_data/wav.scp,speech,sound --valid_shape_file exp/asr_stats_raw_nl_bpe300/valid/speech_shape --resume true --ignore_init_mismatch false --fold_length 80000 --output_dir exp/asr_train_asr_s4_raw_nl_bpe300 --config conf/train_asr_s4.yaml --frontend_conf fs=16k --normalize=global_mvn --normalize_conf stats_file=exp/asr_stats_raw_nl_bpe300/train/feats_stats.npz --train_data_path_and_name_and_type dump/raw/training_data/wav.scp,speech,sound --train_shape_file exp/asr_stats_raw_nl_bpe300/train/speech_shape --fold_length 150 --train_data_path_and_name_and_type dump/raw/training_data/text,text,text --train_shape_file exp/asr_stats_raw_nl_bpe300/train/text_shape.bpe --valid_data_path_and_name_and_type dump/raw/val_data/text,text,text --valid_shape_file exp/asr_stats_raw_nl_bpe300/valid/text_shape.bpe --ngpu 1 --multiprocessing_distributed True 
+# Started at Tue Mar  3 10:59:05 CET 2026
+#
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/bin/python3 /esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/bin/asr_train.py --use_preprocessor true --bpemodel data/nl_token_list/bpe_unigram300/bpe.model --token_type bpe --token_list data/nl_token_list/bpe_unigram300/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --valid_data_path_and_name_and_type dump/raw/val_data/wav.scp,speech,sound --valid_shape_file exp/asr_stats_raw_nl_bpe300/valid/speech_shape --resume true --ignore_init_mismatch false --fold_length 80000 --output_dir exp/asr_train_asr_s4_raw_nl_bpe300 --config conf/train_asr_s4.yaml --frontend_conf fs=16k --normalize=global_mvn --normalize_conf stats_file=exp/asr_stats_raw_nl_bpe300/train/feats_stats.npz --train_data_path_and_name_and_type dump/raw/training_data/wav.scp,speech,sound --train_shape_file exp/asr_stats_raw_nl_bpe300/train/speech_shape --fold_length 150 --train_data_path_and_name_and_type dump/raw/training_data/text,text,text --train_shape_file exp/asr_stats_raw_nl_bpe300/train/text_shape.bpe --valid_data_path_and_name_and_type dump/raw/val_data/text,text,text --valid_shape_file exp/asr_stats_raw_nl_bpe300/valid/text_shape.bpe --ngpu 1 --multiprocessing_distributed True
+[jasmine] 2026-03-03 10:59:30,958 (asr:536) INFO: Vocabulary size: 300
+[jasmine] 2026-03-03 10:59:31,075 (s4:36) WARNING: CUDA extension for cauchy multiplication not found. Please install it via `cd /path/to/espnet/tools && . ./activate_python.sh && ./installers/install_cauchy_mult.sh`. This should speed up end-to-end training by 10-50%
+Failed to import Flash Attention, using ESPnet default: No module named 'flash_attn'
+[KeOps] Compiling cuda jit compiler engine ... 
+[KeOps] Warning : There were warnings or errors :
+In file included from /esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/binders/nvrtc/nvrtc_jit.cpp:33:
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/binders/nvrtc/nvrtc_jit.cpp: In function 'int Compile(const char*, const char*, int, int, int, const char*)':
+<command-line>: error: 'nvrtcGetCUBINSize' was not declared in this scope; did you mean 'nvrtcGetPTXSize'?
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/include/utils_pe.h:6:26: note: in definition of macro 'NVRTC_SAFE_CALL'
+    6 |     nvrtcResult result = x;                                                    \
+      |                          ^
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/binders/nvrtc/nvrtc_jit.cpp:118:19: note: in expansion of macro 'nvrtcGetTARGETSize'
+  118 |   NVRTC_SAFE_CALL(nvrtcGetTARGETSize(prog, &targetSize));
+      |                   ^~~~~~~~~~~~~~~~~~
+<command-line>: error: 'nvrtcGetCUBIN' was not declared in this scope; did you mean 'nvrtcGetPTX'?
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/include/utils_pe.h:6:26: note: in definition of macro 'NVRTC_SAFE_CALL'
+    6 |     nvrtcResult result = x;                                                    \
+      |                          ^
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/binders/nvrtc/nvrtc_jit.cpp:121:19: note: in expansion of macro 'nvrtcGetTARGET'
+  121 |   NVRTC_SAFE_CALL(nvrtcGetTARGET(prog, target));
+      |                   ^~~~~~~~~~~~~~
+
+OK
+[jasmine] 2026-03-03 10:59:31,836 (s4:36) INFO: Pykeops installation found.
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize encoder.enc.0.rnn0.bias_ih_l0 to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize encoder.enc.0.rnn0.bias_hh_l0 to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize encoder.enc.0.bt0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.0.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.0.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.1.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.1.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.1.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.1.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.1.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.2.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.2.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.2.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,073 (initialize:90) INFO: Initialize decoder.decoder.layers.3.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.3.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.4.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.4.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.4.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.4.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.4.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.5.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.5.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.5.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.6.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.6.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.7.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.7.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.7.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.7.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.7.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.8.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.8.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.8.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.9.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.9.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,074 (initialize:90) INFO: Initialize decoder.decoder.layers.10.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.10.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.10.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.10.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.10.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.11.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.11.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.11.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.12.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.12.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.13.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.13.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.13.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.13.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.13.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.14.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.14.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.14.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.15.layer.output_linear.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.15.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.16.layer.linear_q.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.16.layer.linear_k.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.16.layer.linear_v.bias to zeros
+[jasmine] 2026-03-03 10:59:32,075 (initialize:90) INFO: Initialize decoder.decoder.layers.16.layer.linear_out.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.decoder.layers.16.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.decoder.layers.17.layer.ff.0.0.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.decoder.layers.17.layer.ff.2.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.decoder.layers.17.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.decoder.norm.norm.bias to zeros
+[jasmine] 2026-03-03 10:59:32,076 (initialize:90) INFO: Initialize decoder.output.bias to zeros
+[jasmine] 2026-03-03 10:59:32,197 (abs_task:1455) INFO: pytorch.version=2.7.1+cu118, cuda.available=True, cudnn.version=90100, cudnn.benchmark=False, cudnn.deterministic=True
+[jasmine] 2026-03-03 10:59:32,203 (abs_task:1456) INFO: Model structure:
+ESPnetASRModel(
+  (frontend): DefaultFrontend(
+    (stft): Stft(n_fft=512, win_length=512, hop_length=160, center=True, normalized=False, onesided=True)
+    (frontend): Frontend()
+    (logmel): LogMel(sr=16000, n_fft=512, n_mels=80, fmin=0, fmax=8000.0, htk=False)
+  )
+  (normalize): GlobalMVN(stats_file=exp/asr_stats_raw_nl_bpe300/train/feats_stats.npz, norm_means=True, norm_vars=True)
+  (encoder): RNNEncoder(
+    (enc): ModuleList(
+      (0): RNNP(
+        (rnn0): LSTM(80, 256, batch_first=True)
+        (bt0): Linear(in_features=256, out_features=320, bias=True)
+      )
+    )
+  )
+  (decoder): S4Decoder(
+    (embed): Embedding(300, 320)
+    (dropout_emb): Dropout(p=0.1, inplace=False)
+    (decoder): SequenceModel(
+      (drop): Identity()
+      (layers): ModuleList(
+        (0): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (1): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (2): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (3): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (4): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (5): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (6): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (7): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (8): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (9): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (10): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (11): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (12): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (13): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (14): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (15): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (16): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (17): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+      )
+      (norm): Normalization(
+        (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (output): Linear(in_features=320, out_features=300, bias=True)
+  )
+  (criterion_att): LabelSmoothingLoss(
+    (criterion): KLDivLoss()
+  )
+)
+
+Model summary:
+    Class Name: ESPnetASRModel
+    Total Number of model parameters: 9.38 M
+    Number of trainable parameters: 9.38 M (100.0%)
+    Size: 37.53 MB
+    Type: torch.float32
+[jasmine] 2026-03-03 10:59:32,203 (abs_task:1459) INFO: Optimizer:
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    decoupled_weight_decay: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.001
+    maximize: False
+    weight_decay: 0
+)
+[jasmine] 2026-03-03 10:59:32,203 (abs_task:1460) INFO: Scheduler: None
+[jasmine] 2026-03-03 10:59:32,204 (abs_task:1469) INFO: Saving the configuration in exp/asr_train_asr_s4_raw_nl_bpe300/config.yaml
+[jasmine] 2026-03-03 10:59:32,300 (abs_task:1885) INFO: [train] Batch sampler: FoldedBatchSampler(N-batch=323, batch_size=32, shape_files=['exp/asr_stats_raw_nl_bpe300/train/speech_shape', 'exp/asr_stats_raw_nl_bpe300/train/text_shape.bpe'], sort_in_batch=descending, sort_batch=descending)
+[jasmine] 2026-03-03 10:59:32,301 (abs_task:1886) INFO: [train] mini-batch sizes summary: N-batch=323, mean=12.4, min=2, max=32
+[jasmine] 2026-03-03 10:59:32,309 (read_text:31) INFO: keys_to_load is not None, only loading 3996 keys from dump/raw/training_data/text
+[jasmine] 2026-03-03 10:59:32,316 (asr:508) INFO: Optional Data Names: ('text_spk2', 'text_spk3', 'text_spk4', 'prompt')
+[jasmine] 2026-03-03 10:59:32,316 (abs_task:1910) INFO: [train] dataset:
+ESPnetDataset(
+  speech: {"path": "dump/raw/training_data/wav.scp", "type": "sound"}
+  text: {"path": "dump/raw/training_data/text", "type": "text"}
+  preprocess: <espnet2.train.preprocessor.CommonPreprocessor object at 0x1462855d0490>)
+[jasmine] 2026-03-03 10:59:32,342 (abs_task:1885) INFO: [valid] Batch sampler: FoldedBatchSampler(N-batch=70, batch_size=32, shape_files=['exp/asr_stats_raw_nl_bpe300/valid/speech_shape', 'exp/asr_stats_raw_nl_bpe300/valid/text_shape.bpe'], sort_in_batch=descending, sort_batch=descending)
+[jasmine] 2026-03-03 10:59:32,343 (abs_task:1886) INFO: [valid] mini-batch sizes summary: N-batch=70, mean=11.4, min=5, max=32
+[jasmine] 2026-03-03 10:59:32,345 (read_text:31) INFO: keys_to_load is not None, only loading 799 keys from dump/raw/val_data/text
+[jasmine] 2026-03-03 10:59:32,348 (asr:508) INFO: Optional Data Names: ('text_spk2', 'text_spk3', 'text_spk4', 'prompt')
+[jasmine] 2026-03-03 10:59:32,348 (abs_task:1910) INFO: [valid] dataset:
+ESPnetDataset(
+  speech: {"path": "dump/raw/val_data/wav.scp", "type": "sound"}
+  text: {"path": "dump/raw/val_data/text", "type": "text"}
+  preprocess: <espnet2.train.preprocessor.CommonPreprocessor object at 0x1462855d0700>)
+[jasmine] 2026-03-03 10:59:32,350 (abs_task:1885) INFO: [plot_att] Batch sampler: UnsortedBatchSampler(N-batch=799, batch_size=1, key_file=exp/asr_stats_raw_nl_bpe300/valid/speech_shape, 
+[jasmine] 2026-03-03 10:59:32,350 (abs_task:1886) INFO: [plot_att] mini-batch sizes summary: N-batch=3, mean=1.0, min=1, max=1
+[jasmine] 2026-03-03 10:59:32,351 (read_text:31) INFO: keys_to_load is not None, only loading 3 keys from dump/raw/val_data/text
+[jasmine] 2026-03-03 10:59:32,352 (asr:508) INFO: Optional Data Names: ('text_spk2', 'text_spk3', 'text_spk4', 'prompt')
+[jasmine] 2026-03-03 10:59:32,352 (abs_task:1910) INFO: [plot_att] dataset:
+ESPnetDataset(
+  speech: {"path": "dump/raw/val_data/wav.scp", "type": "sound"}
+  text: {"path": "dump/raw/val_data/text", "type": "text"}
+  preprocess: <espnet2.train.preprocessor.CommonPreprocessor object at 0x1462855d24a0>)
+[jasmine] 2026-03-03 10:59:32,776 (trainer:336) INFO: 1/50epoch started
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/train/trainer.py:638: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(
+/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/espnet_model.py:402: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(self.autocast_frontend, dtype=autocast_type):
+Traceback (most recent call last):
+  File "/users/students/r0883470/.pyenv/versions/3.10.19/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/users/students/r0883470/.pyenv/versions/3.10.19/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/bin/asr_train.py", line 23, in <module>
+    main()
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/bin/asr_train.py", line 19, in main
+    ASRTask.main(cmd=cmd)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/tasks/abs_task.py", line 1281, in main
+    cls.main_worker(args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/tasks/abs_task.py", line 1638, in main_worker
+    cls.trainer.run(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/train/trainer.py", line 343, in run
+    all_steps_are_invalid = cls.train_one_epoch(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/train/trainer.py", line 643, in train_one_epoch
+    retval = model(**batch)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/espnet_model.py", line 357, in forward
+    loss_att, acc_att, cer_att, wer_att = self._calc_att_loss(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/espnet_model.py", line 588, in _calc_att_loss
+    decoder_out, _ = self.decoder(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/decoder/s4_decoder.py", line 124, in forward
+    z, state = self.decoder(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/model.py", line 134, in forward
+    outputs, state = layer(outputs, *args, state=prev_state, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/block.py", line 135, in forward
+    y, state = self.layer(y, state=state, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/s4.py", line 1732, in forward
+    k, k_state = self.kernel(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/s4.py", line 1512, in forward
+    return self.kernel(state=state, L=L, rate=rate)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/s4.py", line 881, in forward
+    r = cauchy_conj(v, z, w)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/espnet2/asr/state_spaces/s4.py", line 132, in cauchy_conj
+    r = 2 * cauchy_mult(v, z, w, backend="GPU")
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/torch/generic/generic_red.py", line 693, in __call__
+    out = GenredAutograd_fun(params, *args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/torch/generic/generic_red.py", line 383, in GenredAutograd_fun
+    return GenredAutograd.apply(*inputs)[0]
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/torch/generic/generic_red.py", line 291, in forward
+    return GenredAutograd_base._forward(*inputs)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/torch/generic/generic_red.py", line 91, in _forward
+    myconv = keops_binder["nvrtc" if tagCPUGPU else "cpp"](
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/utils/Cache.py", line 92, in __call__
+    obj = self.cls(*args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/common/keops_io/LoadKeOps_nvrtc.py", line 16, in __init__
+    super().__init__(*args, fast_init=fast_init)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/common/keops_io/LoadKeOps.py", line 18, in __init__
+    self.init(*args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/pykeops/common/keops_io/LoadKeOps.py", line 127, in init
+    ) = get_keops_dll(
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/utils/Cache.py", line 33, in __call__
+    self.library[str_id] = self.fun(*args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/get_keops_dll.py", line 114, in get_keops_dll_impl
+    map_reduce_obj = map_reduce_class(red_formula_string, aliases, *args)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/mapreduce/gpu/GpuReduc1D_ranges.py", line 18, in __init__
+    Gpu_link_compile.__init__(self)
+  File "/esat/audioslave/r0883470/espnet_Mamba/tools/venv/lib/python3.10/site-packages/keopscore/binders/nvrtc/Gpu_link_compile.py", line 64, in __init__
+    self.my_c_dll = CDLL(jit_compile_dll(), mode=RTLD_LAZY)
+  File "/users/students/r0883470/.pyenv/versions/3.10.19/lib/python3.10/ctypes/__init__.py", line 374, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: /users/students/r0883470/.cache/keops2.3/Linux_jasmine.esat.kuleuven.be_6.19.2-300.fc44.x86_64_p3.10.19/nvrtc_jit.so: cannot open shared object file: No such file or directory
+# Accounting: time=31 threads=1
+# Ended (code 1) at Tue Mar  3 10:59:36 CET 2026, elapsed time 31 seconds

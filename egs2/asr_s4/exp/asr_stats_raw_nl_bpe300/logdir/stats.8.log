@@ -1,0 +1,448 @@
+# python3 -m espnet2.bin.asr_train --collect_stats true --use_preprocessor true --bpemodel data/nl_token_list/bpe_unigram300/bpe.model --token_type bpe --token_list data/nl_token_list/bpe_unigram300/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --train_shape_file exp/asr_stats_raw_nl_bpe300/logdir/train.8.scp --valid_shape_file exp/asr_stats_raw_nl_bpe300/logdir/valid.8.scp --output_dir exp/asr_stats_raw_nl_bpe300/logdir/stats.8 --config conf/train_asr_s4.yaml --frontend_conf fs=16k --train_data_path_and_name_and_type dump/raw/training_data/wav.scp,speech,sound --valid_data_path_and_name_and_type dump/raw/val_data/wav.scp,speech,sound --train_data_path_and_name_and_type dump/raw/training_data/text,text,text --valid_data_path_and_name_and_type dump/raw/val_data/text,text,text 
+# Started at Thu Mar  5 17:32:14 CET 2026
+#
+/esat/audioslave/r0883470/miniconda3/envs/cuda128/bin/python3 /esat/audioslave/r0883470/espnet_Mamba/espnet2/bin/asr_train.py --collect_stats true --use_preprocessor true --bpemodel data/nl_token_list/bpe_unigram300/bpe.model --token_type bpe --token_list data/nl_token_list/bpe_unigram300/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --train_shape_file exp/asr_stats_raw_nl_bpe300/logdir/train.8.scp --valid_shape_file exp/asr_stats_raw_nl_bpe300/logdir/valid.8.scp --output_dir exp/asr_stats_raw_nl_bpe300/logdir/stats.8 --config conf/train_asr_s4.yaml --frontend_conf fs=16k --train_data_path_and_name_and_type dump/raw/training_data/wav.scp,speech,sound --valid_data_path_and_name_and_type dump/raw/val_data/wav.scp,speech,sound --train_data_path_and_name_and_type dump/raw/training_data/text,text,text --valid_data_path_and_name_and_type dump/raw/val_data/text,text,text
+[gunmetal] 2026-03-05 17:32:40,538 (asr:535) INFO: Vocabulary size: 300
+[gunmetal] 2026-03-05 17:32:40,616 (s4:32) WARNING: CUDA extension for cauchy multiplication not found. Please install it via `cd /path/to/espnet/tools && . ./activate_python.sh && ./installers/install_cauchy_mult.sh`. This should speed up end-to-end training by 10-50%
+[gunmetal] 2026-03-05 17:32:40,617 (s4:32) WARNING: Falling back on slow Cauchy kernel. Install at least one of pykeops or the CUDA extension for efficiency.
+[gunmetal] 2026-03-05 17:32:40,617 (s4:32) WARNING: Falling back on slow Vandermonde kernel. Install pykeops for improved memory efficiency.
+[gunmetal] 2026-03-05 17:32:42,512 (initialize:43) INFO: Initialize encoder.enc.0.rnn0.bias_ih_l0 to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize encoder.enc.0.rnn0.bias_hh_l0 to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize encoder.enc.0.bt0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.0.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.0.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.1.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.1.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.1.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.1.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.1.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.2.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.2.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.2.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.3.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,520 (initialize:43) INFO: Initialize decoder.decoder.layers.3.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.4.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.4.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.4.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.4.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.4.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.5.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,521 (initialize:43) INFO: Initialize decoder.decoder.layers.5.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,522 (initialize:43) INFO: Initialize decoder.decoder.layers.5.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,522 (initialize:43) INFO: Initialize decoder.decoder.layers.6.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.6.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.7.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.7.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.7.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.7.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.7.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.8.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.8.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.8.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.9.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.9.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.10.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.10.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.10.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.10.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.10.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.11.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.11.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,523 (initialize:43) INFO: Initialize decoder.decoder.layers.11.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.12.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.12.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.13.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.13.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.13.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.13.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.13.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.14.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.14.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.14.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.15.layer.output_linear.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.15.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.16.layer.linear_q.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.16.layer.linear_k.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.16.layer.linear_v.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.16.layer.linear_out.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.16.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.17.layer.ff.0.0.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.17.layer.ff.2.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.layers.17.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.decoder.norm.norm.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,524 (initialize:43) INFO: Initialize decoder.output.bias to zeros
+[gunmetal] 2026-03-05 17:32:42,537 (abs_task:1455) INFO: pytorch.version=2.7.1+cu128, cuda.available=True, cudnn.version=90701, cudnn.benchmark=False, cudnn.deterministic=True
+[gunmetal] 2026-03-05 17:32:42,543 (abs_task:1456) INFO: Model structure:
+ESPnetASRModel(
+  (frontend): DefaultFrontend(
+    (stft): Stft(n_fft=512, win_length=512, hop_length=160, center=True, normalized=False, onesided=True)
+    (frontend): Frontend()
+    (logmel): LogMel(sr=16000, n_fft=512, n_mels=80, fmin=0, fmax=8000.0, htk=False)
+  )
+  (normalize): UtteranceMVN(norm_means=True, norm_vars=False)
+  (encoder): RNNEncoder(
+    (enc): ModuleList(
+      (0): RNNP(
+        (rnn0): LSTM(80, 256, batch_first=True)
+        (bt0): Linear(in_features=256, out_features=320, bias=True)
+      )
+    )
+  )
+  (decoder): S4Decoder(
+    (embed): Embedding(300, 320)
+    (dropout_emb): Dropout(p=0.1, inplace=False)
+    (decoder): SequenceModel(
+      (drop): Identity()
+      (layers): ModuleList(
+        (0): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (1): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (2): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (3): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (4): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (5): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (6): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (7): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (8): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (9): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (10): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (11): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (12): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (13): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (14): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (15): SequenceResidualBlock(
+          (layer): S4(
+            (kernel): SSKernel(
+              (kernel): SSKernelNPLR()
+            )
+            (activation): GELU(approximate='none')
+            (dropout): Dropout(p=0.1, inplace=False)
+            (output_linear): Sequential(
+              (0): Linear(in_features=320, out_features=640, bias=True)
+              (1): GLU(dim=-1)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (16): SequenceResidualBlock(
+          (layer): MultiHeadedAttention(
+            (linear_q): Linear(in_features=320, out_features=320, bias=True)
+            (linear_k): Linear(in_features=320, out_features=320, bias=True)
+            (linear_v): Linear(in_features=320, out_features=320, bias=True)
+            (linear_out): Linear(in_features=320, out_features=320, bias=True)
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+        (17): SequenceResidualBlock(
+          (layer): FF(
+            (ff): Sequential(
+              (0): Sequential(
+                (0): Linear(in_features=320, out_features=1280, bias=True)
+                (1): GELU(approximate='none')
+              )
+              (1): Dropout(p=0.1, inplace=False)
+              (2): Linear(in_features=1280, out_features=320, bias=True)
+            )
+          )
+          (residual): Residual()
+          (norm): Normalization(
+            (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+          )
+          (drop): Dropout(p=0.1, inplace=False)
+          (drop_path): Identity()
+        )
+      )
+      (norm): Normalization(
+        (norm): LayerNorm((320,), eps=1e-05, elementwise_affine=True)
+      )
+    )
+    (output): Linear(in_features=320, out_features=300, bias=True)
+  )
+  (criterion_att): LabelSmoothingLoss(
+    (criterion): KLDivLoss()
+  )
+)
+
+Model summary:
+    Class Name: ESPnetASRModel
+    Total Number of model parameters: 9.38 M
+    Number of trainable parameters: 9.38 M (100.0%)
+    Size: 37.53 MB
+    Type: torch.float32
+[gunmetal] 2026-03-05 17:32:42,544 (abs_task:1459) INFO: Optimizer:
+Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    decoupled_weight_decay: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.001
+    maximize: False
+    weight_decay: 0
+)
+[gunmetal] 2026-03-05 17:32:42,544 (abs_task:1460) INFO: Scheduler: None
+[gunmetal] 2026-03-05 17:32:42,546 (abs_task:1469) INFO: Saving the configuration in exp/asr_stats_raw_nl_bpe300/logdir/stats.8/config.yaml
+[gunmetal] 2026-03-05 17:32:42,571 (abs_task:1480) INFO: Namespace(config='conf/train_asr_s4.yaml', print_config=False, log_level='INFO', drop_last_iter=False, dry_run=False, iterator_type='sequence', valid_iterator_type=None, output_dir='exp/asr_stats_raw_nl_bpe300/logdir/stats.8', ngpu=0, seed=0, num_workers=1, num_att_plot=3, dist_backend='nccl', dist_init_method='env://', dist_world_size=None, dist_rank=None, local_rank=None, dist_master_addr=None, dist_master_port=None, dist_launcher=None, multiprocessing_distributed=False, unused_parameters=False, sharded_ddp=False, use_deepspeed=False, deepspeed_config=None, gradient_as_bucket_view=True, ddp_comm_hook=None, cudnn_enabled=True, cudnn_benchmark=False, cudnn_deterministic=True, use_tf32=False, collect_stats=True, write_collected_feats=False, max_epoch=50, patience=None, val_scheduler_criterion=('valid', 'loss'), early_stopping_criterion=('valid', 'loss', 'min'), best_model_criterion=[('train', 'loss', 'min'), ('valid', 'loss', 'min'), ('train', 'acc', 'max'), ('valid', 'acc', 'max')], keep_nbest_models=[10], nbest_averaging_interval=0, grad_clip=5.0, grad_clip_type=2.0, grad_noise=False, accum_grad=1, no_forward_run=False, resume=False, train_dtype='float32', use_amp=False, log_interval=None, use_matplotlib=True, use_tensorboard=True, create_graph_in_tensorboard=False, use_wandb=False, wandb_project=None, wandb_id=None, wandb_entity=None, wandb_name=None, wandb_model_log_interval=-1, detect_anomaly=False, use_adapter=False, adapter='lora', save_strategy='all', adapter_conf={}, pretrain_path=None, init_param=[], ignore_init_mismatch=False, freeze_param=[], num_iters_per_epoch=None, batch_size=32, valid_batch_size=None, batch_bins=1000000, valid_batch_bins=None, category_sample_size=10, upsampling_factor=0.5, category_upsampling_factor=0.5, dataset_upsampling_factor=0.5, dataset_scaling_factor=1.2, max_batch_size=None, min_batch_size=1, train_shape_file=['exp/asr_stats_raw_nl_bpe300/logdir/train.8.scp'], valid_shape_file=['exp/asr_stats_raw_nl_bpe300/logdir/valid.8.scp'], batch_type='folded', valid_batch_type=None, fold_length=[], sort_in_batch='descending', shuffle_within_batch=False, sort_batch='descending', multiple_iterator=False, chunk_length=500, chunk_shift_ratio=0.5, num_cache_chunks=1024, chunk_excluded_key_prefixes=[], chunk_default_fs=None, chunk_max_abs_length=None, chunk_discard_short_samples=True, train_data_path_and_name_and_type=[('dump/raw/training_data/wav.scp', 'speech', 'sound'), ('dump/raw/training_data/text', 'text', 'text')], valid_data_path_and_name_and_type=[('dump/raw/val_data/wav.scp', 'speech', 'sound'), ('dump/raw/val_data/text', 'text', 'text')], multi_task_dataset=False, allow_variable_data_keys=False, max_cache_size=0.0, max_cache_fd=32, allow_multi_rates=False, valid_max_cache_size=None, exclude_weight_decay=False, exclude_weight_decay_conf={}, optim='adam', optim_conf={'lr': 0.001}, scheduler=None, scheduler_conf={}, token_list=['<blank>', '<unk>', '▁', 'e', 't', 'en', '<.>', 's', 'a', 'o', 'k', 'd', '▁de', 'u', 'i', 'n', 'r', 'er', 'g', 'm', '▁dat', '>', 'l', '▁uh', '▁een', '▁en', '▁het', 'st', '▁van', '▁ge', '▁in', '▁die', 'p', 'el', 'v', '▁is', 'an', 'on', 'sp', '▁m', 'b', '▁<', 'f', 'in', 'c', '▁ik', 'z', 'ij', 'ing', '▁op', 'al', '▁we', '▁h', '▁te', '<*', 'gen', 'ie', '▁voor', '▁z', 'ig', 'de', '▁b', '▁be', 'w', '▁k', '▁maar', 'h', '▁zo', '▁p', '▁ook', '▁ja', 're', '▁niet', '▁ze', 'ge', '▁d', '▁dan', '▁ver', '▁v', 'sch', 'j', 'cht', 'le', 'den', '<?>', '▁je', '▁met', "▁'", '▁aan', '▁zijn', 'or', '▁daar', 'it', 'ken', '▁dus', "'", '▁st', 'ven', 'is', 'tie', 'der', 'ten', 'om', '▁nog', '▁nu', '▁als', 'at', 'ar', '▁om', 'am', '▁er', 'ri', 'aar', '▁was', 'x', '▁wat', '▁wel', 'ur', '▁bij', '▁ma', '▁hè', '▁uit', 'rij', 'ter', '▁over', '<...>', '▁moet', 'ol', '▁f', 'li', '▁ne', 'il', '▁heeft', 'op', '▁re', '▁of', '▁V', '▁hebben', 'aan', '▁naar', '▁w', '▁heb', '▁alle', '▁c', 'uw', 'lo', '▁al', 'wa', 'elijk', '▁kan', '▁waar', '▁na', 'aal', '▁toch', 'y', '▁heel', '-', '▁eigenlijk', '▁twee', 'lijk', '▁gaan', '▁hier', '▁goed', '▁le', '▁B', '▁denk', '▁toe', 'xx', '▁want', 'oor', '▁onder', '▁hij', 'uur', '▁meer', '▁pro', '▁door', '▁la', '▁ander', '▁wij', 'ch', 'A', 'komen', '▁S', '▁mee', '▁vol', '▁worden', '▁C', '▁dit', '▁gaat', '▁mensen', 'werk', '▁E', '▁jaar', '▁één', 'P', '▁G', 'zelf', '▁no', '▁veel', '▁hoe', '▁eerste', '▁tot', 'L', 'R', '▁wordt', '▁af', '▁kunnen', 'T', '▁zeggen', 'land', '▁natuurlijk', 'ë', '▁beetje', '▁iets', 'heid', '▁had', '▁altijd', '▁ons', 'dag', '▁wil', 'eerd', '▁Ma', 'W', 'gra', '▁echt', 'M', '▁doen', '▁grote', 'F', 'K', 'rui', '▁werd', '▁acht', 'houd', 'é', '▁zich', '▁vier', '▁zeker', 'N', '▁misschien', 'honderd', '▁begin', '▁tijd', 'H', '▁vrouw', '▁staat', '▁omdat', 'woord', '▁terug', '▁kijk', '▁Brussel', '▁komt', '▁vijf', '▁drie', '▁gewoon', 'huis', '▁nieuw', '▁binnen', 'U', '▁tussen', '▁soort', 'tellen', '▁plaats', '▁film', 'I', '▁onze', '▁klein', '▁waren', '▁bijvoorbeeld', '▁zitten', 'duizend', '▁laatste', 'O', 'V', 'C', 'è', 'B', 'à', 'S', 'E', 'X', 'G', 'ö', 'ü', 'Q', 'á', '<', 'ç', 'ä', 'Y', 'ï', 'q', 'Z', 'J', 'D', '?', '*', '.', 'ê', '<sos/eos>'], init='xavier_uniform', input_size=None, ctc_conf={'dropout_rate': 0.0, 'ctc_type': 'builtin', 'reduce': True, 'ignore_nan_grad': None, 'zero_infinity': True, 'brctc_risk_strategy': 'exp', 'brctc_group_strategy': 'end', 'brctc_risk_factor': 0.0}, joint_net_conf=None, use_preprocessor=True, use_lang_prompt=False, use_nlp_prompt=False, token_type='bpe', bpemodel='data/nl_token_list/bpe_unigram300/bpe.model', non_linguistic_symbols=None, cleaner=None, g2p=None, speech_volume_normalize=None, rir_scp=None, rir_apply_prob=1.0, noise_scp=None, noise_apply_prob=1.0, noise_db_range='13_15', short_noise_thres=0.5, aux_ctc_tasks=[], frontend='default', frontend_conf={'n_fft': 512, 'hop_length': 160, 'fs': '16k'}, specaug=None, specaug_conf={}, normalize='utterance_mvn', normalize_conf={}, model='espnet', model_conf={'ctc_weight': 0.0, 'lsm_weight': 0.1}, preencoder=None, preencoder_conf={}, encoder='rnn', encoder_conf={'rnn_type': 'lstm', 'bidirectional': False, 'num_layers': 1, 'hidden_size': 256}, postencoder=None, postencoder_conf={}, decoder='s4', decoder_conf={'dropout': 0.1, 'prenorm': True, 'n_layers': 6, 'layer': [{'postact': 'glu', 'dropout': 0.1, 'n_ssm': 1, 'dt_min': 0.001, 'dt_max': 0.1, 'measure': 'legs', 'transposed': False, '_name_': 's4'}, {'n_head': 8, 'dropout': 0.1, 'transposed': False, '_name_': 'mha'}, {'expand': 4, 'activation': 'gelu', 'dropout': 0.1, 'transposed': False, '_name_': 'ff'}], 'residual': 'residual', 'norm': 'layer'}, preprocessor='default', preprocessor_conf={}, required=['output_dir', 'token_list'], version='202511', distributed=False)
+[gunmetal] 2026-03-05 17:32:42,573 (asr:507) INFO: Optional Data Names: ('text_spk2', 'text_spk3', 'text_spk4', 'prompt')
+[gunmetal] 2026-03-05 17:32:42,578 (asr:507) INFO: Optional Data Names: ('text_spk2', 'text_spk3', 'text_spk4', 'prompt')
+# Accounting: time=32 threads=1
+# Ended (code 0) at Thu Mar  5 17:32:46 CET 2026, elapsed time 32 seconds

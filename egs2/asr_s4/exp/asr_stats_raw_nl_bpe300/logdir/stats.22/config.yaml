@@ -1,0 +1,526 @@
+config: conf/train_asr_s4.yaml
+print_config: false
+log_level: INFO
+drop_last_iter: false
+dry_run: false
+iterator_type: sequence
+valid_iterator_type: null
+output_dir: exp/asr_stats_raw_nl_bpe300/logdir/stats.22
+ngpu: 0
+seed: 0
+num_workers: 1
+num_att_plot: 3
+dist_backend: nccl
+dist_init_method: env://
+dist_world_size: null
+dist_rank: null
+local_rank: null
+dist_master_addr: null
+dist_master_port: null
+dist_launcher: null
+multiprocessing_distributed: false
+unused_parameters: false
+sharded_ddp: false
+use_deepspeed: false
+deepspeed_config: null
+gradient_as_bucket_view: true
+ddp_comm_hook: null
+cudnn_enabled: true
+cudnn_benchmark: false
+cudnn_deterministic: true
+use_tf32: false
+collect_stats: true
+write_collected_feats: false
+max_epoch: 50
+patience: null
+val_scheduler_criterion:
+- valid
+- loss
+early_stopping_criterion:
+- valid
+- loss
+- min
+best_model_criterion:
+-   - train
+    - loss
+    - min
+-   - valid
+    - loss
+    - min
+-   - train
+    - acc
+    - max
+-   - valid
+    - acc
+    - max
+keep_nbest_models:
+- 10
+nbest_averaging_interval: 0
+grad_clip: 5.0
+grad_clip_type: 2.0
+grad_noise: false
+accum_grad: 1
+no_forward_run: false
+resume: false
+train_dtype: float32
+use_amp: false
+log_interval: null
+use_matplotlib: true
+use_tensorboard: true
+create_graph_in_tensorboard: false
+use_wandb: false
+wandb_project: null
+wandb_id: null
+wandb_entity: null
+wandb_name: null
+wandb_model_log_interval: -1
+detect_anomaly: false
+use_adapter: false
+adapter: lora
+save_strategy: all
+adapter_conf: {}
+pretrain_path: null
+init_param: []
+ignore_init_mismatch: false
+freeze_param: []
+num_iters_per_epoch: null
+batch_size: 32
+valid_batch_size: null
+batch_bins: 1000000
+valid_batch_bins: null
+category_sample_size: 10
+upsampling_factor: 0.5
+category_upsampling_factor: 0.5
+dataset_upsampling_factor: 0.5
+dataset_scaling_factor: 1.2
+max_batch_size: null
+min_batch_size: 1
+train_shape_file:
+- exp/asr_stats_raw_nl_bpe300/logdir/train.22.scp
+valid_shape_file:
+- exp/asr_stats_raw_nl_bpe300/logdir/valid.22.scp
+batch_type: folded
+valid_batch_type: null
+fold_length: []
+sort_in_batch: descending
+shuffle_within_batch: false
+sort_batch: descending
+multiple_iterator: false
+chunk_length: 500
+chunk_shift_ratio: 0.5
+num_cache_chunks: 1024
+chunk_excluded_key_prefixes: []
+chunk_default_fs: null
+chunk_max_abs_length: null
+chunk_discard_short_samples: true
+train_data_path_and_name_and_type:
+-   - dump/raw/training_data/wav.scp
+    - speech
+    - sound
+-   - dump/raw/training_data/text
+    - text
+    - text
+valid_data_path_and_name_and_type:
+-   - dump/raw/val_data/wav.scp
+    - speech
+    - sound
+-   - dump/raw/val_data/text
+    - text
+    - text
+multi_task_dataset: false
+allow_variable_data_keys: false
+max_cache_size: 0.0
+max_cache_fd: 32
+allow_multi_rates: false
+valid_max_cache_size: null
+exclude_weight_decay: false
+exclude_weight_decay_conf: {}
+optim: adam
+optim_conf:
+    lr: 0.001
+scheduler: null
+scheduler_conf: {}
+token_list:
+- <blank>
+- <unk>
+- ▁
+- e
+- t
+- en
+- <.>
+- s
+- a
+- o
+- k
+- d
+- ▁de
+- u
+- i
+- n
+- r
+- er
+- g
+- m
+- ▁dat
+- '>'
+- l
+- ▁uh
+- ▁een
+- ▁en
+- ▁het
+- st
+- ▁van
+- ▁ge
+- ▁in
+- ▁die
+- p
+- el
+- v
+- ▁is
+- an
+- 'on'
+- sp
+- ▁m
+- b
+- ▁<
+- f
+- in
+- c
+- ▁ik
+- z
+- ij
+- ing
+- ▁op
+- al
+- ▁we
+- ▁h
+- ▁te
+- <*
+- gen
+- ie
+- ▁voor
+- ▁z
+- ig
+- de
+- ▁b
+- ▁be
+- w
+- ▁k
+- ▁maar
+- h
+- ▁zo
+- ▁p
+- ▁ook
+- ▁ja
+- re
+- ▁niet
+- ▁ze
+- ge
+- ▁d
+- ▁dan
+- ▁ver
+- ▁v
+- sch
+- j
+- cht
+- le
+- den
+- <?>
+- ▁je
+- ▁met
+- ▁'
+- ▁aan
+- ▁zijn
+- or
+- ▁daar
+- it
+- ken
+- ▁dus
+- ''''
+- ▁st
+- ven
+- is
+- tie
+- der
+- ten
+- om
+- ▁nog
+- ▁nu
+- ▁als
+- at
+- ar
+- ▁om
+- am
+- ▁er
+- ri
+- aar
+- ▁was
+- x
+- ▁wat
+- ▁wel
+- ur
+- ▁bij
+- ▁ma
+- ▁hè
+- ▁uit
+- rij
+- ter
+- ▁over
+- <...>
+- ▁moet
+- ol
+- ▁f
+- li
+- ▁ne
+- il
+- ▁heeft
+- op
+- ▁re
+- ▁of
+- ▁V
+- ▁hebben
+- aan
+- ▁naar
+- ▁w
+- ▁heb
+- ▁alle
+- ▁c
+- uw
+- lo
+- ▁al
+- wa
+- elijk
+- ▁kan
+- ▁waar
+- ▁na
+- aal
+- ▁toch
+- y
+- ▁heel
+- '-'
+- ▁eigenlijk
+- ▁twee
+- lijk
+- ▁gaan
+- ▁hier
+- ▁goed
+- ▁le
+- ▁B
+- ▁denk
+- ▁toe
+- xx
+- ▁want
+- oor
+- ▁onder
+- ▁hij
+- uur
+- ▁meer
+- ▁pro
+- ▁door
+- ▁la
+- ▁ander
+- ▁wij
+- ch
+- A
+- komen
+- ▁S
+- ▁mee
+- ▁vol
+- ▁worden
+- ▁C
+- ▁dit
+- ▁gaat
+- ▁mensen
+- werk
+- ▁E
+- ▁jaar
+- ▁één
+- P
+- ▁G
+- zelf
+- ▁no
+- ▁veel
+- ▁hoe
+- ▁eerste
+- ▁tot
+- L
+- R
+- ▁wordt
+- ▁af
+- ▁kunnen
+- T
+- ▁zeggen
+- land
+- ▁natuurlijk
+- ë
+- ▁beetje
+- ▁iets
+- heid
+- ▁had
+- ▁altijd
+- ▁ons
+- dag
+- ▁wil
+- eerd
+- ▁Ma
+- W
+- gra
+- ▁echt
+- M
+- ▁doen
+- ▁grote
+- F
+- K
+- rui
+- ▁werd
+- ▁acht
+- houd
+- é
+- ▁zich
+- ▁vier
+- ▁zeker
+- N
+- ▁misschien
+- honderd
+- ▁begin
+- ▁tijd
+- H
+- ▁vrouw
+- ▁staat
+- ▁omdat
+- woord
+- ▁terug
+- ▁kijk
+- ▁Brussel
+- ▁komt
+- ▁vijf
+- ▁drie
+- ▁gewoon
+- huis
+- ▁nieuw
+- ▁binnen
+- U
+- ▁tussen
+- ▁soort
+- tellen
+- ▁plaats
+- ▁film
+- I
+- ▁onze
+- ▁klein
+- ▁waren
+- ▁bijvoorbeeld
+- ▁zitten
+- duizend
+- ▁laatste
+- O
+- V
+- C
+- è
+- B
+- à
+- S
+- E
+- X
+- G
+- ö
+- ü
+- Q
+- á
+- <
+- ç
+- ä
+- Y
+- ï
+- q
+- Z
+- J
+- D
+- '?'
+- '*'
+- .
+- ê
+- <sos/eos>
+init: xavier_uniform
+input_size: null
+ctc_conf:
+    dropout_rate: 0.0
+    ctc_type: builtin
+    reduce: true
+    ignore_nan_grad: null
+    zero_infinity: true
+    brctc_risk_strategy: exp
+    brctc_group_strategy: end
+    brctc_risk_factor: 0.0
+joint_net_conf: null
+use_preprocessor: true
+use_lang_prompt: false
+use_nlp_prompt: false
+token_type: bpe
+bpemodel: data/nl_token_list/bpe_unigram300/bpe.model
+non_linguistic_symbols: null
+cleaner: null
+g2p: null
+speech_volume_normalize: null
+rir_scp: null
+rir_apply_prob: 1.0
+noise_scp: null
+noise_apply_prob: 1.0
+noise_db_range: '13_15'
+short_noise_thres: 0.5
+aux_ctc_tasks: []
+frontend: default
+frontend_conf:
+    n_fft: 512
+    hop_length: 160
+    fs: 16k
+specaug: null
+specaug_conf: {}
+normalize: utterance_mvn
+normalize_conf: {}
+model: espnet
+model_conf:
+    ctc_weight: 0.0
+    lsm_weight: 0.1
+preencoder: null
+preencoder_conf: {}
+encoder: rnn
+encoder_conf:
+    rnn_type: lstm
+    bidirectional: false
+    num_layers: 1
+    hidden_size: 256
+postencoder: null
+postencoder_conf: {}
+decoder: s4
+decoder_conf:
+    dropout: 0.1
+    prenorm: true
+    n_layers: 6
+    layer:
+    -   postact: glu
+        dropout: 0.1
+        n_ssm: 1
+        dt_min: 0.001
+        dt_max: 0.1
+        measure: legs
+        transposed: false
+        _name_: s4
+    -   n_head: 8
+        dropout: 0.1
+        transposed: false
+        _name_: mha
+    -   expand: 4
+        activation: gelu
+        dropout: 0.1
+        transposed: false
+        _name_: ff
+    residual: residual
+    norm: layer
+preprocessor: default
+preprocessor_conf: {}
+required:
+- output_dir
+- token_list
+version: '202511'
+distributed: false

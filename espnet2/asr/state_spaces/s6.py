@@ -1,0 +1,265 @@
+# This code implements Mamba1 and Mamba2 blocks for ESPnet
+# Based on the mamba_ssm library
+
+import math
+from typing import Optional
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from mamba_ssm.modules.mamba_simple import Mamba
+from mamba_ssm.modules.mamba2 import Mamba2 as Mamba2SSM
+from mamba_ssm.utils.generation import InferenceParams
+
+from espnet2.asr.state_spaces.base import SequenceModule
+
+
+class Mamba1(SequenceModule):
+    """Mamba1 block for ESPnet, based on the original Mamba architecture."""
+
+    def __init__(
+        self,
+        d_model,
+        d_state=16,
+        d_conv=4,
+        expand=2,
+        dt_rank="auto",
+        dt_min=0.001,
+        dt_max=0.1,
+        dt_init="random",
+        dt_scale=1.0,
+        dt_init_floor=1e-4,
+        conv_bias=True,
+        bias=False,
+        use_fast_path=True,
+        layer_idx=None,
+        device=None,
+        dtype=None,
+        **kwargs,
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.mamba = Mamba(
+            d_model=d_model,
+            d_state=d_state,
+            d_conv=d_conv,
+            expand=expand,
+            dt_rank=dt_rank,
+            dt_min=dt_min,
+            dt_max=dt_max,
+            dt_init=dt_init,
+            dt_scale=dt_scale,
+            dt_init_floor=dt_init_floor,
+            conv_bias=conv_bias,
+            bias=bias,
+            use_fast_path=use_fast_path,
+            layer_idx=layer_idx,
+            device=device,
+            dtype=dtype,
+        )
+        # Set layer_idx for state management
+        self.layer_idx = layer_idx
+
+    @property
+    def d_output(self):
+        return self.d_model
+
+    def forward(self, x, state=None, **kwargs):
+        """Forward pass.
+
+        x: (B, L, D) input tensor
+        Returns: (B, L, D) output tensor, state
+        """
+        # Mamba expects (B, L, D)
+        if state is not None:
+            # Use the provided inference params for state tracking
+            inference_params = state
+            y = self.mamba(x, inference_params=inference_params)
+        else:
+            y = self.mamba(x)
+        return y, state  # Return the state unchanged for now
+
+    def step(self, x, state, **kwargs):
+        """Step function for recurrent inference.
+
+        x: (B, D) input at current timestep
+        state: InferenceParams object containing the state
+        Returns: (B, D) output, new state
+        """
+        if state is None:
+            # Initialize state if not provided
+            state = self.default_state(x.shape[0], device=x.device)
+        
+        # Use layer_idx if set, otherwise use 0 as default
+        layer_key = self.layer_idx if self.layer_idx is not None else 0
+        
+        # Get states from cache
+        conv_state, ssm_state = state.key_value_memory_dict[layer_key]
+        
+        # Call Mamba step directly with the extracted states
+        y, conv_state, ssm_state = self.mamba.step(x, conv_state, ssm_state)
+        
+        # Update the inference params
+        state.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
+        state.seqlen_offset += 1
+        
+        return y, state
+
+    def default_state(self, *batch_shape, device=None):
+        """Default state for initialization."""
+        if device is None:
+            device = next(self.parameters()).device
+        
+        # Create InferenceParams with allocated cache for this layer
+        inference_params = InferenceParams(
+            max_seqlen=1,  # Will be updated as we step
+            max_batch_size=batch_shape[0] if batch_shape else 1,
+        )
+        
+        # Use layer_idx if set, otherwise use 0 as default
+        layer_key = self.layer_idx if self.layer_idx is not None else 0
+        
+        # Allocate cache for this layer
+        conv_state, ssm_state = self.mamba.allocate_inference_cache(
+            batch_size=batch_shape[0] if batch_shape else 1,
+            max_seqlen=1,
+            dtype=self.mamba.conv1d.weight.dtype
+        )
+        
+        # Store in the inference params
+        inference_params.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
+        
+        return inference_params
+
+
+class Mamba2(SequenceModule):
+    """Mamba2 block for ESPnet, based on the improved Mamba2 architecture."""
+
+    def __init__(
+        self,
+        d_model,
+        d_state=128,
+        d_conv=4,
+        conv_init=None,
+        expand=2,
+        headdim=64,
+        d_ssm=None,
+        ngroups=1,
+        A_init_range=(1, 16),
+        D_has_hdim=False,
+        rmsnorm=True,
+        norm_before_gate=False,
+        dt_min=0.001,
+        dt_max=0.1,
+        dt_init_floor=1e-4,
+        dt_limit=(0.0, float("inf")),
+        bias=False,
+        conv_bias=True,
+        chunk_size=256,
+        use_mem_eff_path=True,
+        layer_idx=None,
+        device=None,
+        dtype=None,
+        **kwargs,
+    ):
+        super().__init__()
+        self.d_model = d_model
+        self.mamba2 = Mamba2SSM(
+            d_model=d_model,
+            d_state=d_state,
+            d_conv=d_conv,
+            conv_init=conv_init,
+            expand=expand,
+            headdim=headdim,
+            d_ssm=d_ssm,
+            ngroups=ngroups,
+            A_init_range=A_init_range,
+            D_has_hdim=D_has_hdim,
+            rmsnorm=rmsnorm,
+            norm_before_gate=norm_before_gate,
+            dt_min=dt_min,
+            dt_max=dt_max,
+            dt_init_floor=dt_init_floor,
+            dt_limit=dt_limit,
+            bias=bias,
+            conv_bias=conv_bias,
+            chunk_size=chunk_size,
+            use_mem_eff_path=use_mem_eff_path,
+            layer_idx=layer_idx,
+            device=device,
+            dtype=dtype,
+        )
+        # Set layer_idx for state management
+        self.layer_idx = layer_idx
+
+    @property
+    def d_output(self):
+        return self.d_model
+
+    def forward(self, x, state=None, **kwargs):
+        """Forward pass.
+
+        x: (B, L, D) input tensor
+        Returns: (B, L, D) output tensor, state
+        """
+        # Mamba2 expects (B, L, D)
+        if state is not None:
+            # Use the provided inference params for state tracking
+            inference_params = state
+            y = self.mamba2(x, inference_params=inference_params)
+        else:
+            y = self.mamba2(x)
+        return y, state  # Return the state unchanged for now
+
+    def step(self, x, state, **kwargs):
+        """Step function for recurrent inference.
+
+        x: (B, D) input at current timestep
+        state: InferenceParams object containing the state
+        Returns: (B, D) output, new state
+        """
+        if state is None:
+            # Initialize state if not provided
+            state = self.default_state(x.shape[0], device=x.device)
+        
+        # Use layer_idx if set, otherwise use 0 as default
+        layer_key = self.layer_idx if self.layer_idx is not None else 0
+        
+        # Get states from cache
+        conv_state, ssm_state = state.key_value_memory_dict[layer_key]
+        
+        # Call Mamba2 step directly with the extracted states
+        y, conv_state, ssm_state = self.mamba2.step(x, conv_state, ssm_state)
+        
+        # Update the inference params
+        state.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
+        state.seqlen_offset += 1
+        
+        return y, state
+
+    def default_state(self, *batch_shape, device=None):
+        """Default state for initialization."""
+        if device is None:
+            device = next(self.parameters()).device
+        
+        # Create InferenceParams with allocated cache for this layer
+        inference_params = InferenceParams(
+            max_seqlen=1,  # Will be updated as we step
+            max_batch_size=batch_shape[0] if batch_shape else 1,
+        )
+        
+        # Use layer_idx if set, otherwise use 0 as default
+        layer_key = self.layer_idx if self.layer_idx is not None else 0
+        
+        # Allocate cache for this layer
+        conv_state, ssm_state = self.mamba2.allocate_inference_cache(
+            batch_size=batch_shape[0] if batch_shape else 1,
+            max_seqlen=1,
+            dtype=self.mamba2.conv1d.weight.dtype
+        )
+        
+        # Store in the inference params
+        inference_params.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
+        
+        return inference_params
