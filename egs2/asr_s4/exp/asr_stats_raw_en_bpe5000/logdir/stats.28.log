@@ -1,5 +1,0 @@
-# python3 -m espnet2.bin.asr_train --collect_stats true --use_preprocessor true --bpemodel data/en_token_list/bpe_unigram5000/bpe.model --token_type bpe --token_list data/en_token_list/bpe_unigram5000/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --train_shape_file exp/asr_stats_raw_en_bpe5000/logdir/train.28.scp --valid_shape_file exp/asr_stats_raw_en_bpe5000/logdir/valid.28.scp --output_dir exp/asr_stats_raw_en_bpe5000/logdir/stats.28 --config conf/train_asr_s4_2.yaml --frontend_conf fs=16k --train_data_path_and_name_and_type dump/raw/train_lib360_copy/wav.scp,speech,sound --valid_data_path_and_name_and_type dump/raw/dev_lib360/wav.scp,speech,sound --train_data_path_and_name_and_type dump/raw/train_lib360_copy/text,text,text --valid_data_path_and_name_and_type dump/raw/dev_lib360/text,text,text 
-# Started at Tue Mar 24 12:55:07 CET 2026
-#
-# Accounting: time=9 threads=1
-# Ended (code 139) at Tue Mar 24 12:55:16 CET 2026, elapsed time 9 seconds
