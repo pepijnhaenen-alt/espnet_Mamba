@@ -97,6 +97,7 @@ egs2/**/exp/**/logdir/
 tools/venv*
 tools/*copy*
 tools/cuda12-8*
+tools/state-spaces/
 
 # tools related
 tools/chainer
