@@ -1,36 +1,59 @@
-# asr_config.yaml
-model:
-  type: "encoder-decoder"
-  encoder:
-    type: "rnn"
-    rnn:
-      type: "lstm"  # or "gru" depending on preference
-      num_layers: 3
-      hidden_dim: 256
-      bidirectional: false  # RNNs should be unidirectional for causality
+# asr_config.yaml (correct recipe layout)
 
-  decoder:
-    type: "s4"  # State-Space model
-    s4:
-      num_layers: 2
-      hidden_dim: 256
-      output_dim: 256  # Matches the encoder's hidden size
+# Encoder configuration
+encoder: rnn
+encoder_conf:
+  rnn_type: lstm
+  bidirectional: false
+  num_layers: 3
+  hidden_size: 256
 
-data:
-  train_"path/to/train_data"
-  valid_"path/to/valid_data"
-  test_"path/to/test_data"
-  batch_size: 32
-  num_workers: 4
+# S4 decoder configuration
+decoder: s4
+decoder_conf:
+  dropout: 0.1
+  prenorm: true
+  n_layers: 2 #should maybe be increased
+  layer:
+    - _name_: s4
+      postact: glu
+      dropout: 0.1
+      n_ssm: 1
+      dt_min: 0.001
+      dt_max: 0.1
+      measure: legs
+    - _name_: ff
+      expand: 4
+      activation: gelu
+      dropout: 0.1
+  residual: residual
+  norm: layer
 
-training:
-  epochs: 50
-  learning_rate: 0.001
-  optimizer: "adam"
-  scheduler: "step"
-  step_size: 10
-  gamma: 0.1
+# Model-specific settings
+model_conf:
+  ctc_weight: 0.0
+  lsm_weight: 0.1
 
-logging:
-  log_interval: 10
-  save_dir: "./checkpoints"
+# Training configuration
+init: xavier_uniform
+max_epoch: 50
+batch_type: folded
+batch_size: 32
+optim: adam
+optim_conf:
+  lr: 0.001
+
+# Data paths (placeholders for recipe)
+# These are typically set by the recipe stage scripts and not required in every config,
+# but you can use them for standalone testing.
+# train_data_path_and_name_and_type: "path/to/train/wav.scp,path/to/train/text,text"
+# valid_data_path_and_name_and_type: "path/to/valid/wav.scp,path/to/valid/text,text"
+# test_data_path_and_name_and_type: "path/to/test/wav.scp,path/to/test/text,text"
+
+# Optional runtime settings
+frontend: default
+frontend_conf:
+  n_fft: 512
+  hop_length: 160
+
+normalize: utterance_mvn

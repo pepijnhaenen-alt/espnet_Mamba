@@ -1,9 +1,15 @@
 """Decoder definition."""
 
+import copy
 from typing import Any, List, Tuple
 
 import torch
 from typeguard import typechecked
+
+try:
+    from mamba_ssm.utils.generation import InferenceParams
+except ImportError:
+    InferenceParams = None
 
 from espnet2.asr.decoder.abs_decoder import AbsDecoder
 from espnet2.asr.state_spaces.model import SequenceModel
@@ -135,6 +141,108 @@ class S4Decoder(AbsDecoder, BatchScorerInterface):
     def score(self, ys, state, x):
         raise NotImplementedError
 
+    def _merge_layer_state(self, states: List[Any]) -> Any:
+        """Merge per-hypothesis states into a single batched state."""
+        if len(states) == 0:
+            return None
+
+        state0 = states[0]
+        if state0 is None:
+            return None
+
+        if torch.is_tensor(state0):
+            return torch.cat(states, dim=0)
+
+        if isinstance(state0, tuple):
+            return tuple(
+                self._merge_layer_state([s[i] for s in states])
+                for i in range(len(state0))
+            )
+
+        if isinstance(state0, list):
+            return [
+                self._merge_layer_state([s[i] for s in states])
+                for i in range(len(state0))
+            ]
+
+        if isinstance(state0, dict):
+            return {
+                k: self._merge_layer_state([s[k] for s in states]) for k in state0
+            }
+
+        if InferenceParams is not None and isinstance(state0, InferenceParams):
+            merged = InferenceParams(
+                max_seqlen=state0.max_seqlen,
+                max_batch_size=len(states),
+            )
+            merged.seqlen_offset = state0.seqlen_offset
+            if hasattr(state0, "batch_size_offset"):
+                merged.batch_size_offset = state0.batch_size_offset
+
+            lengths = [
+                s.lengths_per_sample
+                for s in states
+                if getattr(s, "lengths_per_sample", None) is not None
+            ]
+            if len(lengths) > 0:
+                merged.lengths_per_sample = torch.cat(lengths, dim=0)
+
+            merged.key_value_memory_dict = {
+                k: self._merge_layer_state([s.key_value_memory_dict[k] for s in states])
+                for k in state0.key_value_memory_dict
+            }
+            return merged
+
+        return copy.deepcopy(state0)
+
+    def _split_layer_state(self, state: Any, index: int) -> Any:
+        """Extract a single-hypothesis state from a batched state."""
+        if state is None:
+            return None
+
+        if torch.is_tensor(state):
+            return state[index : index + 1]
+
+        if isinstance(state, tuple):
+            return tuple(self._split_layer_state(s, index) for s in state)
+
+        if isinstance(state, list):
+            return [self._split_layer_state(s, index) for s in state]
+
+        if isinstance(state, dict):
+            return {k: self._split_layer_state(v, index) for k, v in state.items()}
+
+        if InferenceParams is not None and isinstance(state, InferenceParams):
+            split = InferenceParams(max_seqlen=state.max_seqlen, max_batch_size=1)
+            split.seqlen_offset = state.seqlen_offset
+            if hasattr(state, "batch_size_offset"):
+                split.batch_size_offset = state.batch_size_offset
+            if getattr(state, "lengths_per_sample", None) is not None:
+                split.lengths_per_sample = state.lengths_per_sample[index : index + 1]
+            split.key_value_memory_dict = {
+                k: self._split_layer_state(v, index)
+                for k, v in state.key_value_memory_dict.items()
+            }
+            return split
+
+        return copy.deepcopy(state)
+
+    def _merge_batch_states(self, states: List[Any]) -> Any:
+        """Convert beam-search list states into decoder step batched format."""
+        if states is None or len(states) == 0:
+            return None
+        if states[0] is None:
+            return None
+
+        if isinstance(states[0], list):
+            n_layers = len(states[0])
+            return [
+                self._merge_layer_state([state[layer_idx] for state in states])
+                for layer_idx in range(n_layers)
+            ]
+
+        return states
+
     def batch_score(
         self, ys: torch.Tensor, states: List[Any], xs: torch.Tensor
     ) -> Tuple[torch.Tensor, List[Any]]:
@@ -152,13 +260,10 @@ class S4Decoder(AbsDecoder, BatchScorerInterface):
                 and next state list for ys.
 
         """
-        # merge states
         n_batch = len(ys)
         ys = self.embed(ys[:, -1:])
 
-        # workaround for remaining beam width of 1
-        if type(states[0]) is list:
-            states = states[0]
+        states = self._merge_batch_states(states)
 
         assert ys.size(1) == 1, ys.shape
         ys = ys.squeeze(1)
@@ -167,7 +272,7 @@ class S4Decoder(AbsDecoder, BatchScorerInterface):
         logp = self.output(ys).log_softmax(dim=-1)
 
         states_list = [
-            [state[b].unsqueeze(0) if state is not None else None for state in states]
+            [self._split_layer_state(layer_state, b) for layer_state in states]
             for b in range(n_batch)
         ]
 

@@ -97,8 +97,11 @@ class Mamba1(SequenceModule):
         # Get states from cache
         conv_state, ssm_state = state.key_value_memory_dict[layer_key]
         
-        # Call Mamba step directly with the extracted states
-        y, conv_state, ssm_state = self.mamba.step(x, conv_state, ssm_state)
+        # mamba_ssm Mamba.step expects hidden_states with a time axis: (B, 1, D).
+        x_step = x.unsqueeze(1) if x.dim() == 2 else x
+        y, conv_state, ssm_state = self.mamba.step(x_step, conv_state, ssm_state)
+        if y.dim() == 3 and y.size(1) == 1:
+            y = y.squeeze(1)
         
         # Update the inference params
         state.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
@@ -204,13 +207,36 @@ class Mamba2(SequenceModule):
         Returns: (B, L, D) output tensor, state
         """
         # Mamba2 expects (B, L, D)
-        if state is not None:
-            # Use the provided inference params for state tracking
-            inference_params = state
-            y = self.mamba2(x, inference_params=inference_params)
-        else:
-            y = self.mamba2(x)
-        return y, state  # Return the state unchanged for now
+        try:
+            if state is not None:
+                # Use the provided inference params for state tracking
+                inference_params = state
+                y = self.mamba2(x, inference_params=inference_params)
+            else:
+                y = self.mamba2(x)
+            return y, state
+        except RuntimeError as err:
+            # Some causal_conv1d builds enforce strict layout constraints.
+            # Fall back to recurrent stepping for functional correctness.
+            if "causal_conv1d with channel last layout requires strides" not in str(err):
+                raise
+            return self._forward_fallback_by_step(x, state)
+
+    def _forward_fallback_by_step(self, x, state=None):
+        """Fallback forward using recurrent step for portability.
+
+        This path is slower than fused forward but avoids kernel layout
+        constraints in certain causal_conv1d builds.
+        """
+        if state is None:
+            state = self.default_state(x.shape[0], device=x.device)
+
+        ys = []
+        for t in range(x.shape[1]):
+            y_t, state = self.step(x[:, t, :], state)
+            ys.append(y_t.unsqueeze(1))
+        y = torch.cat(ys, dim=1)
+        return y, state
 
     def step(self, x, state, **kwargs):
         """Step function for recurrent inference.
@@ -229,8 +255,11 @@ class Mamba2(SequenceModule):
         # Get states from cache
         conv_state, ssm_state = state.key_value_memory_dict[layer_key]
         
-        # Call Mamba2 step directly with the extracted states
-        y, conv_state, ssm_state = self.mamba2.step(x, conv_state, ssm_state)
+        # mamba_ssm Mamba2.step expects hidden_states with a time axis: (B, 1, D).
+        x_step = x.unsqueeze(1) if x.dim() == 2 else x
+        y, conv_state, ssm_state = self.mamba2.step(x_step, conv_state, ssm_state)
+        if y.dim() == 3 and y.size(1) == 1:
+            y = y.squeeze(1)
         
         # Update the inference params
         state.key_value_memory_dict[layer_key] = (conv_state, ssm_state)

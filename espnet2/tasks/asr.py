@@ -41,9 +41,14 @@ from espnet2.asr.encoder.hubert_encoder import (
     FairseqHubertPretrainEncoder,
     TorchAudioHuBERTPretrainEncoder,
 )
+from espnet2.asr.encoder.hybrid_mamba_attention_encoder import (
+    HybridMambaAttentionEncoder,
+)
 from espnet2.asr.encoder.longformer_encoder import LongformerEncoder
+from espnet2.asr.encoder.mamba_encoder import MambaEncoder
 from espnet2.asr.encoder.multiconvformer_encoder import MultiConvConformerEncoder
 from espnet2.asr.encoder.rnn_encoder import RNNEncoder
+from espnet2.asr.encoder.s4_encoder import S4Encoder
 from espnet2.asr.encoder.transformer_encoder import TransformerEncoder
 from espnet2.asr.encoder.transformer_encoder_multispkr import (
     TransformerEncoder as TransformerEncoderMultiSpkr,
@@ -148,7 +153,7 @@ preencoder_choices = ClassChoices(
     optional=True,
 )
 encoder_choices = ClassChoices(
-    "encoder",
+    name="encoder",
     classes=dict(
         conformer=ConformerEncoder,
         transformer=TransformerEncoder,
@@ -168,6 +173,9 @@ encoder_choices = ClassChoices(
         avhubert=FairseqAVHubertEncoder,
         multiconv_conformer=MultiConvConformerEncoder,
         beats=BeatsEncoder,
+        mamba=MambaEncoder,
+        hybrid_mamba_attention=HybridMambaAttentionEncoder,
+        s4=S4Encoder,
     ),
     type_check=AbsEncoder,
     default="rnn",

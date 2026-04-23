@@ -150,15 +150,15 @@ def make_pad_mask(lengths, xs=None, length_dim=-1, maxlen=None):
     if length_dim == 0:
         raise ValueError("length_dim cannot be 0: {}".format(length_dim))
 
+    # Normalize Python lists to tensors so we can avoid repeated warnings and
+    # use the traceable branch when the other conditions are satisfied.
+    if isinstance(lengths, list):
+        device = xs.device if xs is not None else None
+        lengths = torch.as_tensor(lengths, dtype=torch.long, device=device)
+
     # If the input dimension is 2 or 3,
     # then we use ESPnet-ONNX based implementation for tracable modeling.
     # otherwise we use the traditional implementation for research use.
-    if isinstance(lengths, list):
-        logging.warning(
-            "Using make_pad_mask with a list of lengths is not tracable. "
-            + "If you try to trace this function with type(lengths) == list, "
-            + "please change the type of lengths to torch.LongTensor."
-        )
 
     if (
         (xs is None or xs.dim() in (2, 3))

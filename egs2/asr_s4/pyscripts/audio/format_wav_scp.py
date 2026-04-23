@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import logging
+import os
 from io import BytesIO
 from pathlib import Path
 from typing import Optional, Tuple
@@ -8,7 +9,6 @@ from typing import Optional, Tuple
 import humanfriendly
 import kaldiio
 import numpy as np
-import resampy
 import soundfile
 from tqdm import tqdm
 from typeguard import typechecked
@@ -18,6 +18,24 @@ from espnet2.fileio.sound_scp import SoundScpWriter, soundfile_read
 from espnet2.fileio.vad_scp import VADScpReader
 from espnet2.legacy.utils.cli_utils import get_commandline_args
 from espnet2.utils.types import str2bool
+
+
+def _resample_wave(wave, orig_rate: int, target_rate: int):
+    # Import resampy lazily and guard numba settings to avoid worker-specific crashes.
+    try:
+        os.environ.setdefault("NUMBA_DISABLE_JIT", "1")
+        os.environ.setdefault("NUMBA_NUM_THREADS", "1")
+        os.environ.setdefault("NUMBA_CPU_FEATURES", "")
+        os.environ.setdefault("NUMBA_CPU_NAME", "generic")
+        os.environ.setdefault("NUMBA_THREADING_LAYER", "workqueue")
+        import resampy
+
+        return resampy.resample(wave, orig_rate, target_rate, axis=0)
+    except Exception:
+        # Fallback path when resampy/numba is unstable on the worker node.
+        from scipy.signal import resample_poly
+
+        return resample_poly(wave, target_rate, orig_rate, axis=0)
 
 
 def humanfriendly_or_none(value: str):
@@ -292,7 +310,7 @@ def main():
             save_asis = True
             if args.fs is not None and args.fs != rate:
                 # FIXME(kamo): To use sox?
-                wave = resampy.resample(wave, rate, args.fs, axis=0)
+                wave = _resample_wave(wave, rate, args.fs)
                 rate = args.fs
                 save_asis = False
 

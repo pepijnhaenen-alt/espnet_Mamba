@@ -1,28 +1,34 @@
-#scl enable devtoolset-7 bash &&
-#export PATH=/users/spraak/spch/prog/spch/cuda-11.0/bin${PATH:+:${PATH}}
-#export LD_LIBRARY_PATH=/users/spraak/spch/prog/spch/cuda-11.0/lib64:/users/spraak/spch/prog/spch/cudnn-7.6/lib64:/.singularity.d/libs:${LD_LIBRARY_PATH}
-#export CFLAGS="-I/users/spraak/spch/prog/spch/cuda-11.0/include $CFLAGS" 
-#export CUDA_HOME=/users/spraak/spch/prog/spch/cuda-11.0 
-#export CUDA_PATH=/users/spraak/spch/prog/spch/cuda-11.0 
-
-
 export CUDA_HOME=/esat/audioslave/r0883470/miniconda3/envs/cuda128
-export CUDA_PATH=/esat/audioslave/r0883470/miniconda3/envs/cuda128
+export CUDA_PATH=$CUDA_HOME
+export CONDA_PREFIX=$CUDA_HOME
 
-export PATH=$CUDA_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$CUDA_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$CUDA_HOME/bin:/esat/audioslave/r0883470/miniconda3/bin:/usr/local/bin:/usr/bin:/bin
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$CUDA_HOME/lib64:$CONDA_PREFIX/lib:$CONDA_PREFIX/lib64:$LD_LIBRARY_PATH
 export CUDACXX=$CUDA_HOME/bin/nvcc
 
 export CFLAGS="-I$CONDA_PREFIX/include $CFLAGS"
 export CXXFLAGS="-I$CUDA_HOME/include $CXXFLAGS"
 export LDFLAGS="-L$CONDA_PREFIX/lib $LDFLAGS"
 
-source /esat/audioslave/r0883470/miniconda3/bin/activate cuda128
-#source /users/students/r0883470/.bashrc
-#echo $CPPFLAGS 
-#echo $LDFLAGS 
-#echo $LD_LIBRARY_PATH
-#source /esat/audioslave/r0883470/espnet_Mamba/tools/venv/bin/activate
+# Fix for numba/llvmlite segfaults during resampy import
+export NUMBA_DISABLE_JIT=1
+export NUMBA_NUM_THREADS=1
+export NUMBA_CPU_FEATURES=""
+export NUMBA_CPU_NAME=generic
+export NUMBA_THREADING_LAYER=workqueue
+
+# Enable Python faulthandler for segfault traces
+export PYTHONFAULTHANDLER=1
+
+export ESPNET_SKIP_CONDA_ACTIVATION=1
+
+# Avoid conda shell activation in Condor jobs; it loads libmambapy and may segfault
+# source /users/students/r0883470/.bashrc
+# source /esat/audioslave/r0883470/miniconda3/bin/activate cuda128
+# echo $CPPFLAGS
+# echo $LDFLAGS
+# echo $LD_LIBRARY_PATH
+# source /esat/audioslave/r0883470/espnet_Mamba/tools/venv/bin/activate
 
 #!/usr/bin/env bash
 # Set bash to 'debug' mode, it will exit on :
@@ -30,6 +36,39 @@ source /esat/audioslave/r0883470/miniconda3/bin/activate cuda128
 set -e
 set -u
 set -o pipefail
+
+# Validate binary compatibility of the assigned worker with cuda128 env.
+if ! python3 - <<'PY'
+import ssl
+import asyncio
+import numpy
+import soundfile
+import scipy
+from importlib.metadata import version
+print("validator: ssl", ssl.OPENSSL_VERSION)
+print("validator: numpy", numpy.__version__)
+print("validator: soundfile", soundfile.__version__)
+print("validator: scipy", scipy.__version__)
+print("validator: typeguard", version("typeguard"))
+PY
+then
+    echo "validator: incompatible worker for cuda128 runtime; requesting reschedule"
+    exit 86
+fi
+
+# Parallelism settings: default to NCPU from job environment, then host CPU count.
+PARALLEL_NJ=${NCPU:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)}
+if [ "${PARALLEL_NJ}" -lt 1 ]; then
+    PARALLEL_NJ=1
+fi
+if [ "${PARALLEL_NJ}" -gt 16 ]; then
+    PARALLEL_NJ=16
+fi
+INFER_NJ=4
+if [ "${PARALLEL_NJ}" -lt "${INFER_NJ}" ]; then
+    INFER_NJ=${PARALLEL_NJ}
+fi
+echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
 lang=en
 
@@ -73,13 +112,19 @@ inference_args="--ctc_weight 0.0"
 #         --test_sets "${test_sets}" \
 #         --bpe_train_text "data/${train_set}/text" "$@"
 
+if [ "${DRYRUN:-0}" = "1" ]; then
+    echo "DRYRUN=1 set; skipping asr.sh run"
+    exit 0
+fi
+
 ./asr.sh \
-           --ngpu 1 \
+           --ngpu 0 \
            --nbpe ${nbpe} \
-           --stage 10 \
-           --stop_stage 11 \
-           --audio-format wav \
-	   --inference_nj 4 \
+           --stage 12 \
+           --stop_stage 13 \
+           --audio-format flac \
+	   --nj "${PARALLEL_NJ}" \
+	   --inference_nj "${INFER_NJ}" \
            --asr_config "${asr_config}" \
            --use_lm false \
 	   --lang ${lang} \
