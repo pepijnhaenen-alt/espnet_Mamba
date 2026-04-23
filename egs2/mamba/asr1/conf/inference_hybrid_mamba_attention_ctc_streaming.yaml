@@ -1,0 +1,7 @@
+# Inference configuration for streaming hybrid Mamba+Attention ASR
+# Optimized for real-time streaming decoding with minimal latency
+
+# Beam search decoder configuration
+beam_size: 1
+lm_weight: 0.0
+ctc_weight: 1.0

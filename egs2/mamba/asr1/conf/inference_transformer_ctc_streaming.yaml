@@ -1,0 +1,17 @@
+# Inference config for CTC-only streaming Transformer encoder ASR
+# Use with: --inference_config conf/inference_transformer_ctc_streaming.yaml
+
+beam_size: 1
+nbest: 1
+penalty: 0.0
+maxlenratio: 0.0
+minlenratio: 0.0
+
+# CTC-only training setup (decoder is null in training config)
+ctc_weight: 1.0
+lm_weight: 0.0
+
+# Simulated streaming decode
+streaming: true
+
+batch_size: 1

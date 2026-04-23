@@ -1,0 +1,77 @@
+# CTC-heavy robust hybrid CTC-attention with hybrid Mamba+Attention encoder
+# Prioritizes alignment robustness and noisy-condition stability.
+
+frontend: default
+frontend_conf:
+  n_fft: 512
+  win_length: 512
+  hop_length: 128
+  window: hann
+  n_mels: 80
+  fmin: 80
+  fmax: 7600
+
+specaug: specaug
+specaug_conf:
+  apply_time_warp: false
+  time_mask_width_range: [0, 40]
+  freq_mask_width_range: [0, 24]
+  num_time_mask: 3
+  num_freq_mask: 2
+
+normalize: utterance_mvn
+normalize_conf: {}
+
+encoder: hybrid_mamba_attention
+encoder_conf:
+  output_size: 256
+  hidden_size: 512
+  num_blocks: 16
+  num_heads: 4
+  mamba_type: mamba1
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  conv_kernel_size: 15
+  conv_num_layers: 2
+  linear_units: 2048
+  dropout_rate: 0.15
+  chunk_size: 16
+
+decoder: transformer
+decoder_conf:
+  attention_heads: 4
+  linear_units: 1024
+  num_blocks: 3
+  dropout_rate: 0.15
+  positional_dropout_rate: 0.10
+  self_attention_dropout_rate: 0.05
+  src_attention_dropout_rate: 0.05
+
+ctc_conf:
+  dropout_rate: 0.10
+
+model_conf:
+  ctc_weight: 0.80
+  lsm_weight: 0.05
+  length_normalized_loss: false
+
+optim: adamw
+optim_conf:
+  lr: 0.00020
+  weight_decay: 0.0001
+  betas: [0.9, 0.98]
+  eps: 1.0e-8
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 45000
+
+max_epoch: 90
+resume: false
+batch_type: numel
+batch_bins: 1000000
+accum_grad: 3
+grad_clip: 0.8
+num_workers: 4
+patience: 12

@@ -1,0 +1,69 @@
+frontend: default
+frontend_conf:
+  n_fft: 512
+  win_length: 512
+  hop_length: 128
+  window: hann
+  n_mels: 80
+  fmin: 80
+  fmax: 7600
+
+specaug: specaug
+specaug_conf:
+  apply_time_warp: false
+  time_mask_width_range: [0, 40]
+  freq_mask_width_range: [0, 20]
+  num_time_mask: 2
+  num_freq_mask: 2
+
+normalize: utterance_mvn
+normalize_conf: {}
+
+encoder: contextual_block_transformer
+encoder_conf:
+  output_size: 256
+  attention_heads: 4
+  linear_units: 2048
+  num_blocks: 12
+  dropout_rate: 0.15
+  positional_dropout_rate: 0.15
+  attention_dropout_rate: 0.0
+  input_layer: conv2d
+  normalize_before: true
+  concat_after: false
+  positionwise_layer_type: linear
+  positionwise_conv_kernel_size: 1
+  padding_idx: -1
+  block_size: 40
+  hop_size: 16
+  look_ahead: 16
+  init_average: true
+  ctx_pos_enc: true
+
+decoder: null
+
+ctc_conf:
+  dropout_rate: 0.1
+
+model_conf:
+  ctc_weight: 1.0
+  lsm_weight: 0.0
+  length_normalized_loss: false
+
+optim: adamw
+optim_conf:
+  lr: 0.001
+  weight_decay: 0.0001
+  betas: [0.9, 0.98]
+  eps: 1.0e-8
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 40000
+
+max_epoch: 80
+batch_type: numel
+batch_bins: 1200000
+accum_grad: 2
+grad_clip: 1.0
+num_workers: 4

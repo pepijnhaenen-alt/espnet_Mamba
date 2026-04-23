@@ -1,0 +1,175 @@
+# ESPnet2 Streaming ASR Recipe with Mamba Blocks
+# Optimized for minimal latency while maintaining good perplexity
+
+################################################################################
+# Model Architecture Configuration
+################################################################################
+
+model: mamba_streaming_asr
+encoder: mamba_encoder
+decoder: rnn_decoder
+criterion: ctc_attention
+
+################################################################################
+# Acoustic Feature Extraction
+################################################################################
+
+frontend:
+  name: default
+  n_fft: 512
+  hop_length: 128
+  win_length: 512
+  window: hann
+  n_mels: 80
+  f_min: 80
+  f_max: 7600
+  htk: false
+
+################################################################################
+# Encoder: Mamba-based Streaming Encoder
+################################################################################
+
+encoder:
+  name: mamba_encoder
+  input_size: 80  # n_mels
+  output_size: 256
+  hidden_size: 512
+  num_layers: 12
+  
+  # Streaming-specific parameters
+  chunk_size: 512  # ~256ms chunks at 16kHz with stride=128
+  context_size: 32  # Additional context frames
+  
+  # Mamba block parameters
+  mamba_hidden_dim: 1024
+  mamba_expand: 2
+  d_state: 16  # SSM state size
+  
+  # Causal convolution for local context
+  conv_kernel_size: 31
+  conv_stride: 1
+  conv_padding: 15  # Causal padding: (kernel_size - 1) / 2
+  conv_num_layers: 2
+  conv_out_channels: 512
+  
+  # Position encoding (causal, no future information)
+  pos_enc_layer_type: streaming_relative  # Avoids absolute positions
+  pos_enc_class_name: StreamingRelativePositionalEncoding
+  
+  # Layer configuration
+  layer_norm_eps: 1e-5
+  layer_norm_type: layer_norm
+  activation_fn: swish
+  dropout_rate: 0.1
+  
+  # Interleaved feed-forward (Conformer-style)
+  use_conformer_ffn: true
+  ffn_hidden_size: 2048
+  ffn_ratio: 4
+
+################################################################################
+# Decoder: Lightweight RNN Streaming Decoder
+################################################################################
+
+decoder:
+  name: rnn_decoder
+  rnn_type: lstm
+  hidden_size: 256
+  num_layers: 2
+  output_size: 5000  # vocabulary size
+  attention_dim: 128
+  attention_nhead: 4
+  # Use additive attention (non-causal pooling over encoder hidden states)
+  attention_type: additive
+  dropout_rate: 0.1
+
+################################################################################
+# CTC Configuration
+################################################################################
+
+ctc:
+  type: builtin
+  dropout_rate: 0.1
+  reduce: false
+  zero_infinity: false
+  ignore_nan_inf: false
+
+################################################################################
+# Attention Configuration
+################################################################################
+
+attention_type: add_attention
+attention_dim: 256
+attention_nhead: 4
+attention_dropout_rate: 0.1
+
+################################################################################
+# Training Configuration
+################################################################################
+
+optim:
+  name: adam
+  lr: 0.001
+  eps: 1.0e-8
+  weight_decay: 0.0001
+  betas:
+    - 0.9
+    - 0.98
+
+scheduler:
+  name: warmuplr
+  warmup_steps: 25000
+  total_steps: 200000
+
+################################################################################
+# Streaming-specific Training
+################################################################################
+
+streaming:
+  # Chunk-aware training
+  training_chunk_size: 512
+  test_chunk_size: 512
+  
+  # Simulate streaming during training
+  num_left_chunks: 4  # Receptive field in chunks
+  num_decoding_left_chunks: -1  # Use all previous chunks at inference
+
+################################################################################
+# Loss Configuration
+################################################################################
+
+loss:
+  ctc_weight: 0.3
+  attention_weight: 0.7
+  use_transducer: false
+
+################################################################################
+# Data Configuration
+################################################################################
+
+dataset:
+  batch_size: 32
+  num_workers: 4
+  prefetch_factor: 2
+
+################################################################################
+# Inference Configuration
+################################################################################
+
+decode:
+  asr_train_config: ./configs/asr_train_mamba.yaml
+  asr_model_file: ./exp/asr_model.pth
+  lm_train_config: null
+  lm_file: null
+  lang_model_weight: 0.0
+  
+  # Streaming beam search
+  search_type: streaming_beam_search
+  beam_size: 10
+  max_len_ratio: 0.0
+  min_len_ratio: 0.0
+  
+  # Low-latency decoding
+  nbest: 1
+  streaming: true
+  chunk_size: 512

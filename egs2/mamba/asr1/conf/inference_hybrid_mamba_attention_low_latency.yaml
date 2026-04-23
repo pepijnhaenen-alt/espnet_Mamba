@@ -1,0 +1,9 @@
+# Inference config for low-latency streaming hybrid Mamba+Attention ASR
+# Fast and stable default for chunked streaming decode.
+
+beam_size: 4
+lm_weight: 0.0
+ctc_weight: 0.6
+maxlenratio: 0.0
+minlenratio: 0.0
+nbest: 1

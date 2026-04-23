@@ -1,0 +1,77 @@
+# Low-latency streaming hybrid CTC-attention with hybrid Mamba+Attention encoder
+# Prioritizes low delay while keeping attention-assisted decoding.
+
+frontend: default
+frontend_conf:
+  n_fft: 512
+  win_length: 512
+  hop_length: 128
+  window: hann
+  n_mels: 80
+  fmin: 80
+  fmax: 7600
+
+specaug: specaug
+specaug_conf:
+  apply_time_warp: false
+  time_mask_width_range: [0, 30]
+  freq_mask_width_range: [0, 18]
+  num_time_mask: 2
+  num_freq_mask: 2
+
+normalize: utterance_mvn
+normalize_conf: {}
+
+encoder: hybrid_mamba_attention
+encoder_conf:
+  output_size: 256
+  hidden_size: 448
+  num_blocks: 12
+  num_heads: 4
+  mamba_type: mamba1
+  d_state: 16
+  d_conv: 4
+  expand: 2
+  conv_kernel_size: 15
+  conv_num_layers: 2
+  linear_units: 1792
+  dropout_rate: 0.10
+  chunk_size: 8
+
+decoder: transformer
+decoder_conf:
+  attention_heads: 4
+  linear_units: 1024
+  num_blocks: 2
+  dropout_rate: 0.10
+  positional_dropout_rate: 0.10
+  self_attention_dropout_rate: 0.0
+  src_attention_dropout_rate: 0.0
+
+ctc_conf:
+  dropout_rate: 0.10
+
+model_conf:
+  ctc_weight: 0.60
+  lsm_weight: 0.10
+  length_normalized_loss: false
+
+optim: adamw
+optim_conf:
+  lr: 0.00025
+  weight_decay: 0.0001
+  betas: [0.9, 0.98]
+  eps: 1.0e-8
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 35000
+
+max_epoch: 20
+resume: false
+batch_type: numel
+batch_bins: 900000
+accum_grad: 2
+grad_clip: 1.0
+num_workers: 4
+patience: 10

@@ -1,0 +1,108 @@
+# Causal ESPnet ASR config with Mamba2 decoder-only architecture
+
+# Minimal encoder (required for ASR pipeline)
+encoder: rnn
+encoder_conf:
+    rnn_type: lstm
+    bidirectional: false
+    num_layers: 1
+    hidden_size: 256
+
+# Mamba2 Decoder configuration
+decoder: s4
+decoder_conf:
+    dropout: 0.1
+    prenorm: true
+    n_layers: 6
+    layer:
+        - _name_: mamba2
+          d_state: 128
+          d_conv: 4
+          expand: 2
+          headdim: 64
+          ngroups: 1
+          A_init_range: [1, 16]
+          D_has_hdim: false
+          rmsnorm: true
+          norm_before_gate: false
+          dt_min: 0.001
+          dt_max: 0.1
+          dt_init_floor: 0.0001
+          bias: false
+          conv_bias: true
+          chunk_size: 256
+          use_mem_eff_path: true
+          dropout: 0.1
+        - _name_: mha
+          n_head: 8
+          dropout: 0.1
+        - _name_: ff
+          expand: 4
+          activation: gelu
+          dropout: 0.1
+    residual: residual
+    norm: layer
+
+# Model configuration
+model_conf:
+    ctc_weight: 0.0  # Disable CTC for decoder-only
+    lsm_weight: 0.1
+    length_normalized_loss: false
+
+# Minibatch related
+batch_type: folded
+batch_size: 32
+
+# Optimization related
+accum_grad: 1
+grad_clip: 5
+max_epoch: 50
+patience: 5
+val_scheduler_criterion:
+    - valid
+    - acc
+best_model_criterion:
+-   - valid
+    - acc
+    - max
+keep_nbest_models: 10
+
+# Optimizer
+optim: adam
+optim_conf:
+    lr: 0.001
+
+# Scheduler
+scheduler: warmuplr
+scheduler_conf:
+    warmup_steps: 4000
+
+# Frontend
+frontend: default
+frontend_conf:
+    n_fft: 512
+    hop_length: 160
+
+# SpecAugment
+specaug: specaug
+specaug_conf:
+    apply_time_warp: true
+    time_warp_window: 5
+    time_warp_mode: bicubic
+    apply_freq_mask: true
+    freq_mask_width_range:
+    - 0
+    - 27
+    num_freq_mask: 2
+    apply_time_mask: true
+    time_mask_width_ratio_range:
+    - 0.0
+    - 0.05
+    num_time_mask: 10
+
+# Normalization
+normalize: utterance_mvn
+
+# Initialization
+init: xavier_uniform
+

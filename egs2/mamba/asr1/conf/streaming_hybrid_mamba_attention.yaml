@@ -1,0 +1,89 @@
+# Streaming Hybrid Mamba+Attention Encoder for ASR
+# Configuration based on: "Advancing Streaming ASR with Chunk-wise Attention 
+# and Trans-chunk Selective State Spaces"
+#
+# Best performing model:
+# - 16 layers, hidden_size=512 (wide configuration)
+# - 4 attention heads for within-chunk local attention
+# - d_state=16 for trans-chunk Mamba selective state spaces
+# - chunk_size=20 frames (~400ms latency)
+# - Performance: 7.3% WER on Tedlium2, 0.40 RTF
+
+# Frontend: Mel-spectrogram extraction
+frontend: default
+frontend_conf:
+  n_fft: 512
+  win_length: 512
+  hop_length: 128
+  window: hann
+  n_mels: 80
+  fmin: 80
+  fmax: 7600
+
+# Data augmentation
+specaug: specaug
+specaug_conf:
+  apply_time_warp: false
+  time_mask_width_range: [0, 40]
+  freq_mask_width_range: [0, 20]
+  num_time_mask: 2
+  num_freq_mask: 2
+
+# Normalization
+normalize: utterance_mvn
+normalize_conf: {}
+
+# Hybrid Mamba+Attention Encoder
+encoder: hybrid_mamba_attention
+encoder_conf:
+  output_size: 256                  # Output dimension for CTC/decoder
+  hidden_size: 512                  # Wide configuration from best model
+  num_blocks: 16                    # 16-layer hybrid blocks
+  num_heads: 4                       # Multi-head attention heads
+  mamba_type: mamba2               # Faster CUDA path with comparable accuracy
+  d_state: 16                       # State dimension for selective SSM
+  d_conv: 4                         # Mamba conv kernel size
+  expand: 2                         # Mamba FFN expansion
+  conv_kernel_size: 15              # Frontend depthwise conv kernel
+  conv_num_layers: 2                # Two causal frontend convolutions
+  linear_units: 2048                # FFN hidden dimension
+  dropout_rate: 0.1                 # Dropout for regularization
+  chunk_size: 20                    # Within-chunk attention window (frames)
+  mamba2_chunk_size: 256            # Efficient Mamba2 internal chunking
+
+# No decoder for CTC-only model
+decoder: null
+
+# CTC configuration
+ctc_conf:
+  dropout_rate: 0.1
+
+# Model training configuration
+model_conf:
+  ctc_weight: 1.0                   # CTC-only training
+  lsm_weight: 0.0                   # Label smoothing
+  length_normalized_loss: false
+
+# Optimizer: AdamW with warmup
+optim: adamw
+optim_conf:
+  lr: 0.0003                        # Learning rate
+  weight_decay: 0.0001              # L2 regularization
+  betas: [0.9, 0.98]               # Beta parameters
+  eps: 1.0e-8                       # Epsilon
+
+# Scheduler: Warmup learning rate
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 40000               # Warmup steps
+
+# Training configuration
+max_epoch: 20                        # Maximum number of epochs
+resume: false                       # Resume from checkpoint
+use_amp: true                       # Mixed precision training to reduce VRAM
+batch_type: folded                  # Batch type
+batch_size: 24                      # Stable folded batch cap for this model
+accum_grad: 2                       # Keep effective global batch size while reducing OOM risk
+grad_clip: 1.0                      # Gradient clipping max norm
+num_workers: 8                      # Increase data loading/preprocessing parallelism
+patience: 10                        # Patience for early stopping

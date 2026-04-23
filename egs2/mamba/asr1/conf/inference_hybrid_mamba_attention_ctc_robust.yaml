@@ -1,0 +1,9 @@
+# Inference config for CTC-heavy robust hybrid Mamba+Attention ASR
+# CTC-dominant decode for robustness under mismatch/noise.
+
+beam_size: 3
+lm_weight: 0.0
+ctc_weight: 0.8
+maxlenratio: 0.0
+minlenratio: 0.0
+nbest: 1

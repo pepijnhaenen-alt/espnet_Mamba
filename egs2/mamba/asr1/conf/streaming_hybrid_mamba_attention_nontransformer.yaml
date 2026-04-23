@@ -1,0 +1,77 @@
+# Non-transformer hybrid CTC-attention with hybrid Mamba+Attention encoder
+# Uses an RNN decoder with location attention instead of a transformer decoder.
+
+frontend: default
+frontend_conf:
+  n_fft: 512
+  win_length: 512
+  hop_length: 128
+  window: hann
+  n_mels: 80
+  fmin: 80
+  fmax: 7600
+
+specaug: specaug
+specaug_conf:
+  apply_time_warp: false
+  time_mask_width_range: [0, 40]
+  freq_mask_width_range: [0, 20]
+  num_time_mask: 2
+  num_freq_mask: 2
+
+normalize: utterance_mvn
+normalize_conf: {}
+
+encoder: mamba
+encoder_conf:
+  output_size: 256
+  hidden_size: 512
+  num_blocks: 16
+  d_state: 16
+  expand: 2
+  conv_kernel_size: 15
+  conv_num_layers: 2
+  linear_units: 2048
+  dropout_rate: 0.15
+  chunk_size: 20
+
+decoder: rnn
+decoder_conf:
+  rnn_type: lstm
+  num_layers: 2
+  hidden_size: 512
+  dropout: 0.10
+  sampling_probability: 0.0
+  att_conf:
+    atype: location
+    adim: 256
+    aconv_chans: 10
+    aconv_filts: 100
+
+ctc_conf:
+  dropout_rate: 0.10
+
+model_conf:
+  ctc_weight: 0.55
+  lsm_weight: 0.05
+  length_normalized_loss: false
+
+optim: adamw
+optim_conf:
+  lr: 0.00025
+  weight_decay: 0.0001
+  betas: [0.9, 0.98]
+  eps: 1.0e-8
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 40000
+
+max_epoch: 85
+resume: false
+batch_type: numel
+batch_bins: 1000000
+accum_grad: 2
+grad_clip: 1.0
+num_workers: 4
+patience: 10
