@@ -5,7 +5,7 @@
 #export CUDA_HOME=/users/spraak/spch/prog/spch/cuda-11.0 
 #export CUDA_PATH=/users/spraak/spch/prog/spch/cuda-11.0 
 
-export CUDA_HOME=/esat/audioslave/r0883470/miniconda3/envs/cuda128
+export CUDA_HOME=/esat/audioslave/r0883470/miniconda3/envs/cuda128_t271
 export CUDA_PATH=$CUDA_HOME
 export CONDA_PREFIX=$CUDA_HOME
 
@@ -158,7 +158,8 @@ inference_config=conf/inference_transformer_ctc_streaming.yaml
 
 # CTC-only model: keep CTC enabled during decoding
 inference_args="--ctc_weight 1.0"
-inference_asr_model="valid.loss.ave.pth"
+#inference_asr_model="valid.loss.ave.pth"
+inference_asr_model="10epoch.pth"
 
 # ./asr.sh \
 #         --ngpu 1 \

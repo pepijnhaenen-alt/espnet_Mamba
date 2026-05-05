@@ -94,7 +94,8 @@ pretrain=false
 pt_tag=
 asr_suffix=
 
-exp=exp/cgn_mamba_encoder
+exp=exp
+#exp=exp/cgn_mamba_encoder
 # exp=exp/common_voice
 
 asr_config=conf/streaming_mamba.yaml
@@ -103,7 +104,7 @@ inference_config=conf/inference_mamba_ctc_streaming.yaml
 
 # CTC-only model: keep CTC enabled during decoding
 inference_args="--ctc_weight 1.0"
-inference_asr_model="valid.loss.ave.pth"
+inference_asr_model="valid.loss.best.pth"
 
 # ./asr.sh \
 #         --ngpu 1 \
@@ -128,7 +129,7 @@ fi
 ./asr.sh \
            --ngpu 1 \
            --nbpe ${nbpe} \
-           --stage 10 \
+           --stage 12 \
            --stop_stage 13 \
 	   --nj "${PARALLEL_NJ}" \
 	   --inference_nj "${INFER_NJ}" \

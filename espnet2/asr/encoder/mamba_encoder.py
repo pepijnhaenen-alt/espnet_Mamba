@@ -76,11 +76,11 @@ class MambaEncoder(AbsEncoder):
 
         block_conf = {} if block_conf is None else dict(block_conf)
         if self.mamba_type == "mamba1":
-            # Keep a CPU-compatible default; users can override via block_conf.
-            block_conf.setdefault("use_fast_path", False)
+            # Fast path is typically faster on GPU; keep CPU-safe fallback.
+            block_conf.setdefault("use_fast_path", torch.cuda.is_available())
         else:
-            # Keep a CPU-compatible default; users can override via block_conf.
-            block_conf.setdefault("use_mem_eff_path", False)
+            # Memory-efficient path is typically better on GPU; keep CPU-safe fallback.
+            block_conf.setdefault("use_mem_eff_path", torch.cuda.is_available())
         block_cls = Mamba1 if self.mamba_type == "mamba1" else Mamba2
 
         self.blocks = nn.ModuleList()
@@ -129,6 +129,30 @@ class MambaEncoder(AbsEncoder):
 
     def output_size(self) -> int:
         return self._output_size
+
+    def init_streaming_state(self) -> Optional[List[Any]]:
+        """Return initial streaming state for chunk-wise inference.
+
+        Returning None keeps behavior aligned with existing encoders that
+        do not require explicit state initialization.
+        """
+        return None
+
+    def forward_chunk(
+        self,
+        xs_chunk: torch.Tensor,
+        ilens: torch.Tensor,
+        prev_states: Optional[List[Any]] = None,
+        is_final: bool = False,
+        ctc=None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
+        """Chunk-wise wrapper for streaming inference.
+
+        This method intentionally delegates to forward() so training and
+        full-utterance inference behavior remain unchanged.
+        """
+        del is_final
+        return self.forward(xs_chunk, ilens, prev_states=prev_states, ctc=ctc)
 
     def forward(
         self,

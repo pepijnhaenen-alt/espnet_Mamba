@@ -3,6 +3,7 @@
 
 import math
 from typing import Optional
+import logging
 
 import torch
 import torch.nn as nn
@@ -72,6 +73,8 @@ class Mamba1(SequenceModule):
         Returns: (B, L, D) output tensor, state
         """
         # Mamba expects (B, L, D)
+        logger = logging.getLogger(__name__)
+        logger.debug("Mamba1.forward: fused call, state present=%s", state is not None)
         if state is not None:
             # Use the provided inference params for state tracking
             inference_params = state
@@ -207,6 +210,8 @@ class Mamba2(SequenceModule):
         Returns: (B, L, D) output tensor, state
         """
         # Mamba2 expects (B, L, D)
+        logger = logging.getLogger(__name__)
+        logger.debug("Mamba2.forward: attempting fused call, state present=%s", state is not None)
         try:
             if state is not None:
                 # Use the provided inference params for state tracking
@@ -214,10 +219,15 @@ class Mamba2(SequenceModule):
                 y = self.mamba2(x, inference_params=inference_params)
             else:
                 y = self.mamba2(x)
+            logger.debug("Mamba2.forward: fused call succeeded")
             return y, state
         except RuntimeError as err:
             # Some causal_conv1d builds enforce strict layout constraints.
             # Fall back to recurrent stepping for functional correctness.
+            logger.warning(
+                "Mamba2.forward: fused call failed, falling back to step-by-step inference: %s",
+                err,
+            )
             if "causal_conv1d with channel last layout requires strides" not in str(err):
                 raise
             return self._forward_fallback_by_step(x, state)
@@ -228,6 +238,8 @@ class Mamba2(SequenceModule):
         This path is slower than fused forward but avoids kernel layout
         constraints in certain causal_conv1d builds.
         """
+        logger = logging.getLogger(__name__)
+        logger.warning("Mamba2: running _forward_fallback_by_step (slow, per-frame stepping)")
         if state is None:
             state = self.default_state(x.shape[0], device=x.device)
 

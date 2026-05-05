@@ -125,7 +125,7 @@ inference_config=conf/inference_hybrid_mamba_attention_ctc_streaming.yaml
 
 # Inference arguments for CTC-only model
 inference_args="--ctc_weight 1.0"
-inference_asr_model="valid.loss.ave.pth"
+inference_asr_model="valid.loss.best.pth"
 
 # ============================================================================
 # TRAINING PIPELINE EXECUTION
@@ -150,7 +150,7 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-11} \
+    --stage ${STAGE:-12} \
     --stop_stage ${STOP_STAGE:-13} \
     --nj "${PARALLEL_NJ}" \
     --inference_nj "${INFER_NJ}" \

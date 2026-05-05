@@ -81,9 +81,17 @@ class Speech2TextStreaming:
         )
         asr_model.to(dtype=getattr(torch, dtype)).eval()
 
-        assert isinstance(
+        if isinstance(
             asr_model.encoder, ContextualBlockTransformerEncoder
-        ) or isinstance(asr_model.encoder, ContextualBlockConformerEncoder)
+        ) or isinstance(asr_model.encoder, ContextualBlockConformerEncoder):
+            self.encoder_streaming_mode = "contextual_block"
+        elif hasattr(asr_model.encoder, "forward_chunk"):
+            self.encoder_streaming_mode = "generic_chunk"
+        else:
+            raise NotImplementedError(
+                "Streaming inference requires either a contextual block encoder "
+                "or an encoder implementing forward_chunk()."
+            )
 
         decoder = asr_model.decoder
         ctc = CTCPrefixScorer(ctc=asr_model.ctc, eos=asr_model.eos)
@@ -109,10 +117,11 @@ class Speech2TextStreaming:
             length_bonus=penalty,
         )
 
-        assert "encoder_conf" in asr_train_args
-        assert "look_ahead" in asr_train_args.encoder_conf
-        assert "hop_size" in asr_train_args.encoder_conf
-        assert "block_size" in asr_train_args.encoder_conf
+        if self.encoder_streaming_mode == "contextual_block":
+            assert "encoder_conf" in asr_train_args
+            assert "look_ahead" in asr_train_args.encoder_conf
+            assert "hop_size" in asr_train_args.encoder_conf
+            assert "block_size" in asr_train_args.encoder_conf
         # look_ahead = asr_train_args.encoder_conf['look_ahead']
         # hop_size   = asr_train_args.encoder_conf['hop_size']
         # block_size = asr_train_args.encoder_conf['block_size']
@@ -199,7 +208,10 @@ class Speech2TextStreaming:
 
     def reset(self):
         self.frontend_states = None
-        self.encoder_states = None
+        if hasattr(self.asr_model.encoder, "init_streaming_state"):
+            self.encoder_states = self.asr_model.encoder.init_streaming_state()
+        else:
+            self.encoder_states = None
         self.beam_search.reset()
 
     def apply_frontend(
@@ -313,13 +325,21 @@ class Speech2TextStreaming:
         )
 
         if feats is not None:
-            enc, _, self.encoder_states = self.asr_model.encoder(
-                feats,
-                feats_lengths,
-                self.encoder_states,
-                is_final=is_final,
-                infer_mode=True,
-            )
+            if self.encoder_streaming_mode == "contextual_block":
+                enc, _, self.encoder_states = self.asr_model.encoder(
+                    feats,
+                    feats_lengths,
+                    self.encoder_states,
+                    is_final=is_final,
+                    infer_mode=True,
+                )
+            else:
+                enc, _, self.encoder_states = self.asr_model.encoder.forward_chunk(
+                    feats,
+                    feats_lengths,
+                    self.encoder_states,
+                    is_final=is_final,
+                )
             nbest_hyps = self.beam_search(
                 x=enc[0],
                 maxlenratio=self.maxlenratio,

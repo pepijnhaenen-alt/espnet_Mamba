@@ -291,6 +291,22 @@ class HybridMambaAttentionEncoder(AbsEncoder):
         """Return output feature dimension."""
         return self._output_size
 
+    def init_streaming_state(self) -> Optional[List[Any]]:
+        """Return initial streaming state for chunk-wise inference."""
+        return None
+
+    def forward_chunk(
+        self,
+        xs_chunk: torch.Tensor,
+        ilens: torch.Tensor,
+        prev_states: Optional[List[Any]] = None,
+        is_final: bool = False,
+        ctc=None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
+        """Chunk-wise wrapper used by streaming inference drivers."""
+        del is_final
+        return self.forward(xs_chunk, ilens, prev_states=prev_states, ctc=ctc)
+
     def forward(
         self,
         xs_pad: torch.Tensor,

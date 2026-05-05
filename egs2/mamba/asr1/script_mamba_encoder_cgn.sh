@@ -254,7 +254,7 @@ if [ "${resume_mode}" = "auto" ] && [ -d "${inference_exp}/$(compute_inference_t
 fi
 
 ./asr.sh \
-           --ngpu 1 \
+           --ngpu 0 \
            --nbpe ${nbpe} \
            --stage 12 \
            --stop_stage 13 \
