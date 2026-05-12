@@ -1,5 +1,5 @@
-# Non-transformer hybrid CTC-attention with hybrid Mamba+Attention encoder
-# Uses an RNN decoder with location attention instead of a transformer decoder.
+# Streaming Mamba2 + RNN-T training recipe
+# Goal: reduce decoding latency vs attention decoder with minimal WER degradation.
 
 frontend: default
 frontend_conf:
@@ -36,26 +36,28 @@ encoder_conf:
   dropout_rate: 0.15
   chunk_size: 20
 
-decoder: rnn
+decoder: transducer
 decoder_conf:
   rnn_type: lstm
-  num_layers: 2
+  num_layers: 1
   hidden_size: 512
   dropout: 0.10
-  sampling_probability: 0.0
-  att_conf:
-    atype: location
-    adim: 256
-    aconv_chans: 10
-    aconv_filts: 100
+  dropout_embed: 0.10
+
+joint_net_conf:
+  joint_space_size: 640
+  joint_activation_type: tanh
 
 ctc_conf:
   dropout_rate: 0.10
 
 model_conf:
-  ctc_weight: 0.55
-  lsm_weight: 0.05
+  ctc_weight: 0.30
+  interctc_weight: 0.0
+  lsm_weight: 0.0
   length_normalized_loss: false
+  report_cer: false
+  report_wer: false
 
 optim: adamw
 optim_conf:
@@ -69,7 +71,7 @@ scheduler_conf:
   warmup_steps: 40000
 
 max_epoch: 40
-resume: true
+resume: false
 batch_type: numel
 batch_bins: 1400000
 accum_grad: 2

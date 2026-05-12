@@ -5,7 +5,10 @@
 
 import argparse
 import logging
-from distutils.util import strtobool
+try:
+    from setuptools._distutils.util import strtobool
+except ImportError:
+    from distutils.util import strtobool
 
 import kaldiio
 import numpy

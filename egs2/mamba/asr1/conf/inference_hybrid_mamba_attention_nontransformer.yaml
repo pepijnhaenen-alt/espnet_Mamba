@@ -4,6 +4,3 @@
 beam_size: 8
 lm_weight: 0.0
 ctc_weight: 0.55
-maxlenratio: 0.0
-minlenratio: 0.0
-nbest: 1

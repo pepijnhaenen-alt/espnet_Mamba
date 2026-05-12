@@ -8,7 +8,10 @@ import subprocess
 import sys
 import warnings
 from collections import OrderedDict
-from distutils.util import strtobool
+try:
+    from setuptools._distutils.util import strtobool
+except ImportError:
+    from distutils.util import strtobool
 from pathlib import Path
 from tempfile import TemporaryDirectory
 

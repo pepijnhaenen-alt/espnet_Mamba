@@ -128,6 +128,9 @@ nll_batch_size=100 # Affect GPU memory usage when computing nll
 k2_config=./conf/decode_asr_transformer_with_k2.yaml
 
 use_streaming=false # Whether to use streaming decoding
+compute_streaming_metrics=true # Whether to aggregate true streaming interaction metrics.
+streaming_metrics_log_name=asr_inference # Prefix for decoding logs.
+streaming_metrics_include_empty_updates=false # Include zero-token updates when computing lag stats.
 
 use_maskctc=false # Whether to use maskctc decoding
 
@@ -259,6 +262,9 @@ Options:
     --inference_asr_model # ASR model path for decoding (default="${inference_asr_model}").
     --download_model      # Download a model from Model Zoo and use it for decoding (default="${download_model}").
     --use_streaming       # Whether to use streaming decoding (default="${use_streaming}").
+    --compute_streaming_metrics # Whether to aggregate true streaming interaction metrics (default="${compute_streaming_metrics}").
+    --streaming_metrics_log_name # Prefix for log files used in streaming metric aggregation (default="${streaming_metrics_log_name}").
+    --streaming_metrics_include_empty_updates # Include zero-token updates in lag stats (default="${streaming_metrics_include_empty_updates}").
     --use_maskctc         # Whether to use maskctc decoding (default="${use_streaming}").
 
     # [Task dependent] Set the datadir name created by local/data.sh
@@ -1131,6 +1137,11 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
         jobname="${lm_exp}/train.log"
     fi
 
+    _mp_distributed=true
+    if [ "${ngpu}" -le 1 ]; then
+        _mp_distributed=false
+    fi
+
     # shellcheck disable=SC2086
     ${python} -m espnet2.bin.launch \
         --cmd "${cuda_cmd} --name ${jobname}" \
@@ -1138,7 +1149,7 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
         --ngpu "${ngpu}" \
         --num_nodes "${num_nodes}" \
         --init_file_prefix "${lm_exp}"/.dist_init_ \
-        --multiprocessing_distributed true -- \
+        --multiprocessing_distributed "${_mp_distributed}" -- \
         ${python} -m espnet2.bin.lm_train \
             --ngpu "${ngpu}" \
             --use_preprocessor true \
@@ -1449,6 +1460,11 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
 
     else
         log "Use ESPnet trainer"
+        _mp_distributed=true
+        if [ "${ngpu}" -le 1 ]; then
+            _mp_distributed=false
+        fi
+
         # shellcheck disable=SC2086
         ${python} -m espnet2.bin.launch \
             --cmd "${cuda_cmd} --name ${jobname}" \
@@ -1456,7 +1472,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
             --ngpu "${ngpu}" \
             --num_nodes "${num_nodes}" \
             --init_file_prefix "${asr_exp}"/.dist_init_ \
-            --multiprocessing_distributed true -- \
+            --multiprocessing_distributed "${_mp_distributed}" -- \
             ${python} -m espnet2.bin.${asr_task}_train \
                 --use_preprocessor true \
                 --bpemodel "${bpemodel}" \
@@ -1752,6 +1768,47 @@ if [ ${stage} -le 13 ] && [ ${stop_stage} -ge 13 ] && ! [[ " ${skip_stages} " =~
     scripts/utils/show_asr_result.sh "${asr_exp}" > "${asr_exp}"/RESULTS.md
     cat "${asr_exp}"/RESULTS.md
 
+fi
+
+
+if [ ${stage} -le 16 ] && [ ${stop_stage} -ge 16 ] && ! [[ " ${skip_stages} " =~ [[:space:]]16[[:space:]] ]]; then
+    log "Stage 16: Aggregate true streaming interaction metrics"
+
+    if ! "${use_streaming}"; then
+        log "Skip stage 16 because use_streaming=false"
+    elif ! "${compute_streaming_metrics}"; then
+        log "Skip stage 16 because compute_streaming_metrics=false"
+    else
+        if "${eval_valid_set}"; then
+            _dsets="org/${valid_set} ${test_sets}"
+        else
+            _dsets="${test_sets}"
+        fi
+
+        for dset in ${_dsets}; do
+            _dir="${asr_exp}/${inference_tag}/${dset}"
+            _logdir="${_dir}/logdir"
+
+            if ! ls "${_logdir}/${streaming_metrics_log_name}".*.log >/dev/null 2>&1; then
+                log "Skip ${dset}: no ${streaming_metrics_log_name}.*.log found in ${_logdir}"
+                continue
+            fi
+
+            _stream_opts=""
+            if "${streaming_metrics_include_empty_updates}"; then
+                _stream_opts+="--include-empty-updates "
+            fi
+
+            log "Writing streaming metrics to ${_dir}/streaming_metrics.{txt,json}"
+            # shellcheck disable=SC2086
+            ${python} pyscripts/utils/calculate_streaming_metrics.py \
+                --log-dir "${_logdir}" \
+                --log-name "${streaming_metrics_log_name}" \
+                --output-text "${_dir}/streaming_metrics.txt" \
+                --output-json "${_dir}/streaming_metrics.json" \
+                ${_stream_opts}
+        done
+    fi
 fi
 
 

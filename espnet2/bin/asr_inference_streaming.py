@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import logging
 import math
 import sys
+import time
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
@@ -454,6 +456,19 @@ def inference(
         encoded_feat_length_limit=encoded_feat_length_limit,
     )
 
+    def _infer_sample_rate_from_train_args(train_args) -> int:
+        """Best-effort sample-rate extraction for streaming latency metrics."""
+        for conf_name in ("frontend_conf", "preprocessor_conf"):
+            conf = getattr(train_args, conf_name, None)
+            if isinstance(conf, dict) and "fs" in conf and conf["fs"] is not None:
+                try:
+                    return int(conf["fs"])
+                except (TypeError, ValueError):
+                    pass
+        return 16000
+
+    sample_rate = _infer_sample_rate_from_train_args(speech2text.asr_train_args)
+
     # 3. Build data-iterator
     loader = ASRTask.build_streaming_iterator(
         data_path_and_name_and_type,
@@ -475,6 +490,7 @@ def inference(
             assert all(isinstance(s, str) for s in keys), keys
             _bs = len(next(iter(batch.values())))
             assert len(keys) == _bs, f"{len(keys)} != {_bs}"
+            key = keys[0]
             batch = {k: v[0] for k, v in batch.items() if not k.endswith("_lengths")}
             assert len(batch.keys()) == 1
 
@@ -484,15 +500,83 @@ def inference(
                     results = speech2text(**batch)
                 else:
                     speech = batch["speech"]
-                    for i in range(len(speech) // sim_chunk_length):
-                        speech2text(
-                            speech=speech[
-                                i * sim_chunk_length : (i + 1) * sim_chunk_length
-                            ],
-                            is_final=False,
+                    total_samples = int(len(speech))
+                    total_chunks = max(1, math.ceil(total_samples / sim_chunk_length))
+                    utt_start = time.perf_counter()
+                    first_token_elapsed_ms = None
+                    lag_values_ms = []
+                    results = []
+
+                    for i in range(total_chunks):
+                        start_idx = i * sim_chunk_length
+                        end_idx = min((i + 1) * sim_chunk_length, total_samples)
+                        is_final = end_idx >= total_samples
+                        chunk = speech[start_idx:end_idx]
+
+                        partial_results = speech2text(speech=chunk, is_final=is_final)
+                        emit_elapsed_ms = (time.perf_counter() - utt_start) * 1000.0
+                        audio_end_ms = end_idx * 1000.0 / sample_rate
+                        lag_ms = max(0.0, emit_elapsed_ms - audio_end_ms)
+
+                        if partial_results:
+                            token_count = len(partial_results[0][2])
+                            if token_count > 0 and first_token_elapsed_ms is None:
+                                first_token_elapsed_ms = emit_elapsed_ms
+                            lag_values_ms.append(lag_ms)
+                        else:
+                            token_count = 0
+
+                        logging.info(
+                            "stream_event: %s",
+                            json.dumps(
+                                {
+                                    "event": "update",
+                                    "utt_id": key,
+                                    "chunk_index": i,
+                                    "total_chunks": total_chunks,
+                                    "audio_end_ms": round(audio_end_ms, 3),
+                                    "emit_elapsed_ms": round(emit_elapsed_ms, 3),
+                                    "lag_ms": round(lag_ms, 3),
+                                    "token_count": token_count,
+                                    "is_final": is_final,
+                                },
+                                sort_keys=True,
+                            ),
                         )
-                    results = speech2text(
-                        speech[(i + 1) * sim_chunk_length : len(speech)], is_final=True
+
+                        if is_final:
+                            results = partial_results
+
+                    final_emit_elapsed_ms = (time.perf_counter() - utt_start) * 1000.0
+                    end_of_speech_ms = total_samples * 1000.0 / sample_rate
+                    epd_ms = max(0.0, final_emit_elapsed_ms - end_of_speech_ms)
+
+                    if first_token_elapsed_ms is not None:
+                        logging.info(
+                            "stream_event: %s",
+                            json.dumps(
+                                {
+                                    "event": "first_token",
+                                    "utt_id": key,
+                                    "first_token_latency_ms": round(
+                                        first_token_elapsed_ms, 3
+                                    ),
+                                },
+                                sort_keys=True,
+                            ),
+                        )
+
+                    logging.info(
+                        "stream_event: %s",
+                        json.dumps(
+                            {
+                                "event": "final",
+                                "utt_id": key,
+                                "endpoint_delay_ms": round(epd_ms, 3),
+                                "num_updates_with_tokens": len(lag_values_ms),
+                            },
+                            sort_keys=True,
+                        ),
                     )
             except TooShortUttError as e:
                 logging.warning(f"Utterance {keys} {e}")
@@ -500,7 +584,6 @@ def inference(
                 results = [[" ", ["<space>"], [2], hyp]] * nbest
 
             # Only supporting batch_size==1
-            key = keys[0]
             for n, (text, token, token_int, hyp) in zip(range(1, nbest + 1), results):
                 # Create a directory: outdir/{n}best_recog
                 ibest_writer = writer[f"{n}best_recog"]

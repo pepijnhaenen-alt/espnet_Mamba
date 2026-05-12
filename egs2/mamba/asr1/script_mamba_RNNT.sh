@@ -16,6 +16,8 @@ export CUDACXX=$CUDA_HOME/bin/nvcc
 export CFLAGS="-I$CONDA_PREFIX/include ${CFLAGS:-}"
 export CXXFLAGS="-I$CUDA_HOME/include ${CXXFLAGS:-}"
 export LDFLAGS="-L$CONDA_PREFIX/lib ${LDFLAGS:-}"
+export LD_LIBRARY_PATH="/esat/audioslave/r0883470/espnet_Mamba/tools/warp-transducer/build:${LD_LIBRARY_PATH}"
+export PYTHONPATH="/esat/audioslave/r0883470/espnet_Mamba/tools/warp-transducer/pytorch_binding:${PYTHONPATH:-}"
 
 export NUMBA_DISABLE_JIT=1
 export NUMBA_NUM_THREADS=1
@@ -27,6 +29,11 @@ export NUMBA_THREADING_LAYER=workqueue
 export PYTHONFAULTHANDLER=1
 export ESPNET_SKIP_CONDA_ACTIVATION=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+SHARED_RUN_DIR=$(pwd)
+SHARED_ASR_EXP="${SHARED_RUN_DIR}/exp/mamba_RNNT"
+LOCAL_RECIPE_DIR="${SHARED_RUN_DIR}"
+LOCAL_ASR_EXP="${SHARED_ASR_EXP}"
 
 # ============================================================================
 # ENVIRONMENT VALIDATION
@@ -83,12 +90,60 @@ train_set="train_cased_cleaned"
 valid_set="val_cased_cleaned"
 test_sets="test_cased_cleaned"
 nbpe=5000
+exp=exp/mamba_RNNT
 
-exp=exp/hybrid_mamba_attention_nontransformer
-asr_config=conf/streaming_hybrid_mamba_attention_nontransformer.yaml
-inference_config=conf/inference_hybrid_mamba_attention_nontransformer.yaml
-inference_args="--ctc_weight 0.55"
+asr_config=conf/streaming_mamba_RNNT.yaml
+inference_config=conf/inference_mamba_RNNT.yaml
+inference_args="--ctc_weight 0.30"
 inference_asr_model="valid.loss.best.pth"
+
+if [ "${RUN_ON_SCRATCH:-0}" != "0" ]; then
+    if [ -n "${_CONDOR_SCRATCH_DIR:-}" ] && [ -d "${_CONDOR_SCRATCH_DIR}" ]; then
+        LOCAL_RUN_DIR="${_CONDOR_SCRATCH_DIR}/mamba_rnnt_local"
+        mkdir -p "${LOCAL_RUN_DIR}"
+        LOCAL_RECIPE_DIR="${LOCAL_RUN_DIR}/recipe"
+        mkdir -p "${LOCAL_RECIPE_DIR}"
+        cat > "${LOCAL_RECIPE_DIR}/path.sh" <<'EOF'
+export PATH="$PWD/utils/:$PATH"
+export LC_ALL=C
+export OMP_NUM_THREADS=1
+export PYTHONIOENCODING=UTF-8
+export NCCL_SOCKET_IFNAME="^lo,docker,virbr,vmnet,vboxnet"
+if [ -f local/path.sh ]; then
+    . local/path.sh
+fi
+EOF
+        for item in asr.sh cmd.sh conf utils steps pyscripts scripts data dump; do
+            if [ -e "${SHARED_RUN_DIR}/${item}" ] && [ ! -e "${LOCAL_RECIPE_DIR}/${item}" ]; then
+                ln -s "${SHARED_RUN_DIR}/${item}" "${LOCAL_RECIPE_DIR}/${item}"
+            fi
+        done
+        mkdir -p "${LOCAL_RECIPE_DIR}/local"
+        cat > "${LOCAL_RECIPE_DIR}/local/path.sh" <<'EOF'
+:
+EOF
+        LOCAL_ASR_EXP="${LOCAL_RECIPE_DIR}/exp/mamba_RNNT"
+        mkdir -p "${LOCAL_ASR_EXP}"
+        sync_back_local_exp() {
+            if [ -d "${LOCAL_ASR_EXP}" ]; then
+                mkdir -p "${SHARED_ASR_EXP}"
+                if command -v rsync >/dev/null 2>&1; then
+                    rsync -a "${LOCAL_ASR_EXP}/" "${SHARED_ASR_EXP}/"
+                else
+                    cp -a "${LOCAL_ASR_EXP}/." "${SHARED_ASR_EXP}/"
+                fi
+            fi
+        }
+        trap sync_back_local_exp EXIT
+        cd "${LOCAL_RECIPE_DIR}"
+        export PYTHONPATH="${SHARED_RUN_DIR}/../../..:${PYTHONPATH:-}"
+        echo "scratch mode: local recipe dir ${LOCAL_RECIPE_DIR}"
+        echo "scratch mode: tensorboard/checkpoints on ${LOCAL_ASR_EXP}"
+        echo "scratch mode: results will sync back to ${SHARED_ASR_EXP}"
+    else
+        echo "scratch mode requested but _CONDOR_SCRATCH_DIR is unavailable; using shared run dir"
+    fi
+fi
 
 if [ "${DRYRUN:-0}" = "1" ]; then
     echo "DRYRUN=1 set; skipping asr.sh run"
@@ -103,6 +158,7 @@ fi
     --nj "${PARALLEL_NJ}" \
     --inference_nj "${INFER_NJ}" \
     --gpu_inference true \
+    --asr_exp "${LOCAL_ASR_EXP}" \
     --asr_config "${asr_config}" \
     --use_lm false \
     --lang ${lang} \
