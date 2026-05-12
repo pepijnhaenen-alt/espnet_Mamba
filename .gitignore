@@ -92,6 +92,8 @@ egs2/**/exp/**/*.log
 egs2/**/exp/**/*.out
 egs2/**/exp/**/*.err
 egs2/**/exp/**/logdir/
+egs2/**/exp/**/*.pth
+egs2/**/exp/**/checkpoint.pth
 
 # Exclude virtual environments and copies in tools
 tools/venv*
