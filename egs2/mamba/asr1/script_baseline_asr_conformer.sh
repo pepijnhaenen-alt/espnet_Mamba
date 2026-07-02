@@ -5,18 +5,6 @@ set -e
 set -u
 set -o pipefail
 
-# lang=nl
-# train_set="train_cased_cleaned"
-# valid_set="val_cased_cleaned"
-# test_sets="test_cased_cleaned_small"
-lang=en
-train_set="train_lib360_copy"
-valid_set="dev_lib360"
-test_sets="test_lib360_small"
-
-nbpe=5000
-exp=exp/mamba_RNNT/Libri360
-
 export CUDA_HOME=${CUDA_HOME:-/esat/audioslave/r0883470/miniconda3/envs/cuda128_mamba}
 export CUDA_PATH=$CUDA_HOME
 export CONDA_PREFIX=$CUDA_HOME
@@ -43,7 +31,7 @@ export ESPNET_SKIP_CONDA_ACTIVATION=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 SHARED_RUN_DIR=$(pwd)
-SHARED_ASR_EXP="${SHARED_RUN_DIR}/${exp}"
+SHARED_ASR_EXP="${SHARED_RUN_DIR}/exp/baseline/asr_conformer/cgn"
 LOCAL_RECIPE_DIR="${SHARED_RUN_DIR}"
 LOCAL_ASR_EXP="${SHARED_ASR_EXP}"
 
@@ -97,10 +85,21 @@ echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
 echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
-asr_config=conf/streaming_mamba_RNNT.yaml
-inference_config=conf/inference_mamba_RNNT.yaml
-inference_args="--ctc_weight 0.30"
-inference_asr_model="valid.loss.best.pth"
+lang=nl
+train_set="train_cased_cleaned"
+valid_set="val_cased_cleaned"
+test_sets="test_cased_cleaned_small"
+# lang=en
+# train_set="train_lib360_copy"
+# valid_set="dev_lib360"
+# test_sets="test_lib360"
+nbpe=5000
+exp=exp/baseline/asr_conformer/cgn
+
+asr_config=conf/baselines/train_asr_conformer.yaml
+inference_config=conf/baselines/decode.yaml
+inference_args="--ctc_weight 0.0"
+inference_asr_model="10epoch.pth" #"valid.acc.best.pth"
 
 if [ "${RUN_ON_SCRATCH:-0}" != "0" ]; then
     if [ -n "${_CONDOR_SCRATCH_DIR:-}" ] && [ -d "${_CONDOR_SCRATCH_DIR}" ]; then
@@ -127,7 +126,7 @@ EOF
         cat > "${LOCAL_RECIPE_DIR}/local/path.sh" <<'EOF'
 :
 EOF
-        LOCAL_ASR_EXP="${LOCAL_RECIPE_DIR}/${exp}"
+        LOCAL_ASR_EXP="${LOCAL_RECIPE_DIR}/exp/baseline/asr_conformer/cgn"
         mkdir -p "${LOCAL_ASR_EXP}"
         sync_back_local_exp() {
             if [ -d "${LOCAL_ASR_EXP}" ]; then
@@ -158,13 +157,12 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-11} \
+    --stage ${STAGE:-12} \
     --stop_stage ${STOP_STAGE:-13} \
+    --audio-format flac \
     --nj "${PARALLEL_NJ}" \
     --inference_nj "${INFER_NJ}" \
     --gpu_inference true \
-    --use_streaming true \
-    --compute_streaming_metrics true \
     --asr_exp "${LOCAL_ASR_EXP}" \
     --asr_config "${asr_config}" \
     --use_lm false \

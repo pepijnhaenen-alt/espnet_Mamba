@@ -1,0 +1,20 @@
+# Decode configuration for Mamba2 ASR model
+# Optimized for decoder-only architecture with Mamba2 layers
+
+# Tokenization (same as training)
+token_type: bpe
+bpemodel: data/nl_token_list/bpe_unigram300/bpe.model
+
+# Beam search parameters
+beam_size: 20  # Moderate beam size for good accuracy/speed balance
+nbest: 1       # Output single best hypothesis
+maxlenratio: 0.0  # Automatic max length detection
+minlenratio: 0.0  # Automatic min length detection
+
+# Score weights
+ctc_weight: 0.3  # No CTC since this is decoder-only architecture
+lm_weight: 0.0   # No external language model (decoder-only)
+
+# Inference settings
+streaming: true  # Mamba2 step decoding expects one-token progression in standard beam search
+batch_size: 1

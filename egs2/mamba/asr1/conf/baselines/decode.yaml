@@ -1,0 +1,16 @@
+# Inference config for CTC-only Mamba encoder ASR
+# Use with: --inference_config conf/inference_mamba_ctc_streaming.yaml
+
+beam_size: 10
+nbest: 1
+penalty: 0.0
+maxlenratio: 0.0
+minlenratio: 0.0
+
+ctc_weight: 0.0 #0.3
+lm_weight: 0.0
+
+# Simulated streaming decode
+streaming: false #true
+
+batch_size: 1

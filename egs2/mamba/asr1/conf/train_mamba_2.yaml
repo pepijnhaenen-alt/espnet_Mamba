@@ -41,12 +41,12 @@ decoder_conf:
 
 # Model-specific settings
 model_conf:
-  ctc_weight: 0.0
+  ctc_weight: 0.3
   lsm_weight: 0.1
 
 # Training configuration
 init: xavier_uniform
-max_epoch: 50
+max_epoch: 10
 batch_type: folded
 batch_size: 32
 optim: adam

@@ -42,31 +42,50 @@ set -e
 set -u
 set -o pipefail
 
+# lang=nl
+# train_set="train_cased_cleaned"
+# valid_set="val_cased_cleaned"
+# test_sets="test_cased_cleaned_small" #in quotation marks because multiple can be given seperated by a space
+
+lang=en
+train_set="train_lib360_copy"
+valid_set="dev_lib360"
+test_sets="test_lib360_small"
+
+#old_lang=rian
+nbpe=5000
+pretrain=false
+pt_tag=
+asr_suffix=
+
+exp=exp/baseline/transformer_streaming
+# exp=exp/common_voice
+
 # Validate binary compatibility of the assigned worker with cuda128 env.
-# This preflight probes the stage-3 formatter import chain in a short-lived
-# process so incompatible nodes are rescheduled before launching parallel jobs.
-VALIDATOR_TIMEOUT_SEC=${VALIDATOR_TIMEOUT_SEC:-40}
-set +e
-timeout "${VALIDATOR_TIMEOUT_SEC}"s python3 - <<'PY'
-import humanfriendly
-import kaldiio
+if ! python3 - <<'PY'
+import ssl
+import asyncio
 import numpy
 import soundfile
+import scipy
 import typeguard
-
-import espnet2.fileio.read_text  # noqa: F401
-import espnet2.fileio.sound_scp  # noqa: F401
-import espnet2.fileio.vad_scp  # noqa: F401
-import espnet2.legacy.utils.cli_utils  # noqa: F401
-
-print("validator: formatter imports ok")
+import torch
+from triton.runtime import driver
+from importlib.metadata import version
+print("validator: ssl", ssl.OPENSSL_VERSION)
 print("validator: numpy", numpy.__version__)
+print("validator: soundfile", soundfile.__version__)
+print("validator: scipy", scipy.__version__)
+print("validator: typeguard", version("typeguard"))
+if not torch.cuda.is_available():
+    raise RuntimeError("validator: torch.cuda.is_available() is False")
+# Ensure Triton can see an active CUDA driver for Mamba2 kernels.
+driver.active.get_current_target()
+print("validator: cuda", torch.version.cuda)
+print("validator: triton driver ok")
 PY
-validator_rc=$?
-set -e
-if [ "${validator_rc}" -ne 0 ]; then
-    echo "validator: failed with exit code ${validator_rc}; requesting reschedule"
-    echo "validator: incompatible worker for formatter runtime; requesting reschedule"
+then
+    echo "validator: incompatible worker for cuda128 runtime; requesting reschedule"
     exit 86
 fi
 
@@ -78,27 +97,73 @@ fi
 if [ "${PARALLEL_NJ}" -gt 16 ]; then
     PARALLEL_NJ=16
 fi
-INFER_NJ=1
+INFER_NJ=8
 echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
-lang=nl
+SHARED_RUN_DIR=$(pwd)
+SHARED_ASR_EXP="${SHARED_RUN_DIR}/${exp}"
+LOCAL_ASR_EXP="${SHARED_ASR_EXP}"
+LOCAL_RECIPE_DIR="${SHARED_RUN_DIR}"
 
-train_set="train_cased_cleaned"
-valid_set="val_cased_cleaned"
-test_sets="test_cased_cleaned_small" #in quotation marks because multiple can be given seperated by a space
+if [ "${RUN_ON_SCRATCH:-0}" = "0" ]; then
+    echo "scratch mode disabled: using shared run dir ${SHARED_RUN_DIR}"
 
-#old_lang=rian
-nbpe=5000
-pretrain=false
-pt_tag=
-asr_suffix=
+else
+    echo "scratch mode enabled:"
+    if [ -n "${_CONDOR_SCRATCH_DIR:-}" ] && [ -d "${_CONDOR_SCRATCH_DIR}" ]; then
+        LOCAL_RUN_DIR="${_CONDOR_SCRATCH_DIR}/asr1_local"
+        mkdir -p "${LOCAL_RUN_DIR}"
+        LOCAL_RECIPE_DIR="${LOCAL_RUN_DIR}/recipe"
+        mkdir -p "${LOCAL_RECIPE_DIR}"
+        cat > "${LOCAL_RECIPE_DIR}/path.sh" <<'EOF'
+export PATH="$PWD/utils/:$PATH"
+export LC_ALL=C
+export OMP_NUM_THREADS=1
+export PYTHONIOENCODING=UTF-8
+export NCCL_SOCKET_IFNAME="^lo,docker,virbr,vmnet,vboxnet"
+if [ -f local/path.sh ]; then
+    . local/path.sh
+fi
+EOF
+        for item in asr.sh cmd.sh conf utils steps pyscripts scripts data dump; do
+            if [ -e "${SHARED_RUN_DIR}/${item}" ] && [ ! -e "${LOCAL_RECIPE_DIR}/${item}" ]; then
+                ln -s "${SHARED_RUN_DIR}/${item}" "${LOCAL_RECIPE_DIR}/${item}"
+            fi
+        done
+        mkdir -p "${LOCAL_RECIPE_DIR}/local"
+        cat > "${LOCAL_RECIPE_DIR}/local/path.sh" <<'EOF'
+:
+EOF
+        LOCAL_ASR_EXP="${LOCAL_RECIPE_DIR}/${exp}"
+        mkdir -p "${LOCAL_ASR_EXP}"
+        sync_back_local_exp() {
+            if [ -d "${LOCAL_ASR_EXP}" ]; then
+                mkdir -p "${SHARED_ASR_EXP}"
+                if command -v rsync >/dev/null 2>&1; then
+                    rsync -a "${LOCAL_ASR_EXP}/" "${SHARED_ASR_EXP}/"
+                else
+                    cp -a "${LOCAL_ASR_EXP}/." "${SHARED_ASR_EXP}/"
+                fi
+            fi
+        }
+        trap sync_back_local_exp EXIT
+        cd "${LOCAL_RECIPE_DIR}"
+        export PYTHONPATH="${SHARED_RUN_DIR}/../../..:${PYTHONPATH:-}"
+        echo "scratch mode: tensorboard/checkpoints on local node path ${LOCAL_ASR_EXP}"
+        echo "scratch mode: results will sync back to ${SHARED_ASR_EXP}"
+    else
+        echo "scratch mode requested but _CONDOR_SCRATCH_DIR is unavailable; falling back to shared run dir"
+    fi
+fi
 
-exp=exp/mamba_RNNT
-# exp=exp/common_voice
+asr_config=conf/baselines/train_asr_streaming_transformer.yaml
+
+inference_config=conf/baselines/decode_asr_streaming.yaml
 
 # CTC-only model: keep CTC enabled during decoding
-inference_args="--ctc_weight 1.0"
-inference_asr_model="valid.loss.best.pth"
+inference_args="--ctc_weight 0.3"
+inference_asr_model="valid.acc.ave.pth"
+#inference_asr_model="10epoch.pth"
 
 # ./asr.sh \
 #         --ngpu 1 \
@@ -121,20 +186,30 @@ if [ "${DRYRUN:-0}" = "1" ]; then
 fi
 
 ./asr.sh \
-           --ngpu 0 \
+           --ngpu 1 \
            --nbpe ${nbpe} \
-           --stage 3 \
-           --stop_stage 5 \
+           --stage 12 \
+           --stop_stage 13 \
+	   --asr_exp "${LOCAL_ASR_EXP}" \
 	   --nj "${PARALLEL_NJ}" \
+	   --inference_nj "${INFER_NJ}" \
+	   --gpu_inference true \
+           --use_streaming true \
+           --compute_streaming_metrics true \
+           --asr_config "${asr_config}" \
+           --use_lm false \
 	   --lang ${lang} \
            --use_ngram false \
            --token_type bpe \
            --feats_type raw \
+           --inference_config "${inference_config}" \
+           --inference_asr_model "${inference_asr_model}" \
+           --inference_args "${inference_args}" \
            --train_set "${train_set}" \
            --valid_set "${valid_set}" \
            --test_sets "${test_sets}" \
            --bpe_train_text "data/${train_set}/text" "$@" \
-            --expdir "${exp}"
+        --expdir "${exp}" 
 #        --asr_tag "train_asr_conformer_finetuning_raw_lang_bpe5000_eta05" \
 
 # 1-2: Data preparation. We won't need this (for now); our data is prepared elsewhere. 
@@ -144,4 +219,4 @@ fi
 # ​10: ASR collects stats regarding the data. For each dataset, you always have to run this stage before you can run stage 11. This is also done using a GPU. 
 # 11: ASR model training. Here is where you train the ASR model, using a GPU. 
 # 12-13: to evaluate and score the model. This will be done after training, using a separate job (without GPU). 
-# ​​14-16: to upload the model to website, we won't need this.
+# ​​14-16: Stage 16 will now compute and report streaming interaction metrics (FTL, lag, EPD) on the inference output.

@@ -656,12 +656,13 @@ class ESPnetASRModel(AbsESPnetModel):
             encoder_out.unsqueeze(2), decoder_out.unsqueeze(1)
         )
 
-        loss_transducer = self.criterion_transducer(
-            joint_out,
-            target,
-            t_len,
-            u_len,
-        )
+        with autocast(False):
+            loss_transducer = self.criterion_transducer(
+                joint_out.float(),
+                target,
+                t_len,
+                u_len,
+            )
 
         cer_transducer, wer_transducer = None, None
         if not self.training and self.error_calculator_trans is not None:

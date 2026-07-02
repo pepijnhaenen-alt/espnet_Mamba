@@ -9,13 +9,13 @@ set -o pipefail
 # train_set="train_cased_cleaned"
 # valid_set="val_cased_cleaned"
 # test_sets="test_cased_cleaned_small"
+# exp=exp/baseline/asr_conformer_steven/cgn
 lang=en
 train_set="train_lib360_copy"
 valid_set="dev_lib360"
 test_sets="test_lib360_small"
-
+exp=exp/mamba_rnn/libri
 nbpe=5000
-exp=exp/mamba_RNNT/Libri360
 
 export CUDA_HOME=${CUDA_HOME:-/esat/audioslave/r0883470/miniconda3/envs/cuda128_mamba}
 export CUDA_PATH=$CUDA_HOME
@@ -97,10 +97,10 @@ echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
 echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
-asr_config=conf/streaming_mamba_RNNT.yaml
-inference_config=conf/inference_mamba_RNNT.yaml
-inference_args="--ctc_weight 0.30"
-inference_asr_model="valid.loss.best.pth"
+asr_config=conf/streaming_mamba_asr_recipe.yaml
+inference_config=conf/inference_mamba_ctc_streaming.yaml
+inference_args="--ctc_weight 1.0"
+inference_asr_model="10epoch.pth" #"valid.acc.best.pth"
 
 if [ "${RUN_ON_SCRATCH:-0}" != "0" ]; then
     if [ -n "${_CONDOR_SCRATCH_DIR:-}" ] && [ -d "${_CONDOR_SCRATCH_DIR}" ]; then
@@ -158,13 +158,12 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-11} \
+    --stage ${STAGE:-10} \
     --stop_stage ${STOP_STAGE:-13} \
+    --audio-format flac \
     --nj "${PARALLEL_NJ}" \
     --inference_nj "${INFER_NJ}" \
     --gpu_inference true \
-    --use_streaming true \
-    --compute_streaming_metrics true \
     --asr_exp "${LOCAL_ASR_EXP}" \
     --asr_config "${asr_config}" \
     --use_lm false \

@@ -8,7 +8,7 @@
 model: mamba_streaming_asr
 encoder: mamba_encoder
 decoder: rnn_decoder
-criterion: ctc_attention
+#criterion: ctc_attention
 
 ################################################################################
 # Acoustic Feature Extraction
@@ -29,8 +29,7 @@ frontend:
 # Encoder: Mamba-based Streaming Encoder
 ################################################################################
 
-encoder:
-  name: mamba_encoder
+encoder_conf:
   input_size: 80  # n_mels
   output_size: 256
   hidden_size: 512
@@ -71,23 +70,22 @@ encoder:
 # Decoder: Lightweight RNN Streaming Decoder
 ################################################################################
 
-decoder:
-  name: rnn_decoder
+decoder_conf:
   rnn_type: lstm
   hidden_size: 256
   num_layers: 2
   output_size: 5000  # vocabulary size
-  attention_dim: 128
-  attention_nhead: 4
+  #attention_dim: 128
+  #attention_nhead: 4
   # Use additive attention (non-causal pooling over encoder hidden states)
-  attention_type: additive
+  #attention_type: additive
   dropout_rate: 0.1
 
 ################################################################################
 # CTC Configuration
 ################################################################################
 
-ctc:
+ctc_conf:
   type: builtin
   dropout_rate: 0.1
   reduce: false
@@ -98,17 +96,17 @@ ctc:
 # Attention Configuration
 ################################################################################
 
-attention_type: add_attention
-attention_dim: 256
-attention_nhead: 4
-attention_dropout_rate: 0.1
+#attention_type: add_attention
+#attention_dim: 256
+#attention_nhead: 4
+#attention_dropout_rate: 0.1
 
 ################################################################################
 # Training Configuration
 ################################################################################
 
-optim:
-  name: adam
+optim: adamw
+optim_conf:
   lr: 0.001
   eps: 1.0e-8
   weight_decay: 0.0001
@@ -116,8 +114,8 @@ optim:
     - 0.9
     - 0.98
 
-scheduler:
-  name: warmuplr
+scheduler: warmuplr
+scheduler_conf:
   warmup_steps: 25000
   total_steps: 200000
 
@@ -138,15 +136,16 @@ streaming:
 # Loss Configuration
 ################################################################################
 
-loss:
+model_conf:
   ctc_weight: 0.3
-  attention_weight: 0.7
+  #attention_weight: 0.7
   use_transducer: false
 
 ################################################################################
 # Data Configuration
 ################################################################################
 
+max_epoch: 10
 dataset:
   batch_size: 32
   num_workers: 4
@@ -156,20 +155,20 @@ dataset:
 # Inference Configuration
 ################################################################################
 
-decode:
-  asr_train_config: ./configs/asr_train_mamba.yaml
-  asr_model_file: ./exp/asr_model.pth
-  lm_train_config: null
-  lm_file: null
-  lang_model_weight: 0.0
+# decode:
+#   #asr_train_config: ./configs/asr_train_mamba.yaml
+#   #asr_model_file: ./exp/asr_model.pth
+#   lm_train_config: null
+#   lm_file: null
+#   lang_model_weight: 0.0
   
-  # Streaming beam search
-  search_type: streaming_beam_search
-  beam_size: 10
-  max_len_ratio: 0.0
-  min_len_ratio: 0.0
+#   # Streaming beam search
+#   search_type: streaming_beam_search
+#   beam_size: 10
+#   max_len_ratio: 0.0
+#   min_len_ratio: 0.0
   
-  # Low-latency decoding
-  nbest: 1
-  streaming: true
-  chunk_size: 512
+#   # Low-latency decoding
+#   nbest: 1
+#   streaming: true
+#   chunk_size: 512

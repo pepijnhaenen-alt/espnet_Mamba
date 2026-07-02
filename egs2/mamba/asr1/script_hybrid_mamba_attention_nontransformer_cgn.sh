@@ -81,13 +81,13 @@ echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 lang=nl
 train_set="train_cased_cleaned"
 valid_set="val_cased_cleaned"
-test_sets="test_cased_cleaned"
+test_sets="test_cased_cleaned_small"
 nbpe=5000
 
 exp=exp/hybrid_mamba_attention_nontransformer
 asr_config=conf/streaming_hybrid_mamba_attention_nontransformer.yaml
 inference_config=conf/inference_hybrid_mamba_attention_nontransformer.yaml
-inference_args="--ctc_weight 0.55"
+inference_args="--ctc_weight 0.55 --sim_chunk_length 2048"
 inference_asr_model="valid.loss.best.pth"
 
 if [ "${DRYRUN:-0}" = "1" ]; then
@@ -98,8 +98,8 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-10} \
-    --stop_stage ${STOP_STAGE:-11} \
+    --stage ${STAGE:-12} \
+    --stop_stage ${STOP_STAGE:-13} \
     --nj "${PARALLEL_NJ}" \
     --inference_nj "${INFER_NJ}" \
     --gpu_inference true \
@@ -109,6 +109,7 @@ fi
     --use_ngram false \
     --token_type bpe \
     --feats_type raw \
+    --compute_streaming_metrics true \
     --inference_config "${inference_config}" \
     --inference_asr_model "${inference_asr_model}" \
     --inference_args "${inference_args}" \

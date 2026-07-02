@@ -6,6 +6,7 @@ package for both Mamba1 and Mamba2.
 """
 
 from typing import Any, Dict, List, Optional, Tuple
+StreamingState = List[Any]
 
 import torch
 import torch.nn as nn
@@ -130,19 +131,26 @@ class MambaEncoder(AbsEncoder):
     def output_size(self) -> int:
         return self._output_size
 
-    def init_streaming_state(self) -> Optional[List[Any]]:
-        """Return initial streaming state for chunk-wise inference.
+    def init_streaming_state(
+        self,
+        batch_size: int = 1,
+        device: Optional[torch.device] = None,
+    ) -> List[Any]:
+        """Create one inference state per Mamba block."""
 
-        Returning None keeps behavior aligned with existing encoders that
-        do not require explicit state initialization.
-        """
-        return None
+        if device is None:
+            device = next(self.parameters()).device
+
+        return [
+            blk.default_state(batch_size=batch_size, device=device)
+            for blk in self.blocks
+        ]
 
     def forward_chunk(
         self,
         xs_chunk: torch.Tensor,
         ilens: torch.Tensor,
-        prev_states: Optional[List[Any]] = None,
+        prev_states: Optional[StreamingState] = None,
         is_final: bool = False,
         ctc=None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
@@ -158,7 +166,7 @@ class MambaEncoder(AbsEncoder):
         self,
         xs_pad: torch.Tensor,
         ilens: torch.Tensor,
-        prev_states: Optional[List[Any]] = None,
+        prev_states: Optional[StreamingState] = None,
         ctc=None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
         x = self.in_proj(xs_pad)
@@ -166,20 +174,27 @@ class MambaEncoder(AbsEncoder):
         for conv in self.frontend_convs:
             x = conv(x)
 
-        new_states: List[Any] = []
+        new_states = None if prev_states is None else prev_states
         for i, (blk, ffn) in enumerate(zip(self.blocks, self.ffns)):
-            st = None if prev_states is None else prev_states[i]
 
             # Pre-norm + residual around the Mamba mixer for stable training.
-            x_mamba = self.mamba_norms[i](x).contiguous()
-            x_mamba, st = blk(x_mamba, state=st)
-            x = x + x_mamba
+            x_norm = self.mamba_norms[i](x).contiguous()
+            
+            if prev_states is None:
+                x_mamba, _ = blk(x_norm)
+            else:
+                x_mamba, st = blk(x_norm, state=new_states[i]) #This might break the use of states
+                new_states[i] = st
 
             # Pre-norm + residual around the FFN, transformer-style.
+            x = x + x_mamba
             x = x + ffn(self.ffn_norms[i](x))
-            new_states.append(st)
 
         x = self.norm_out(x)
         x = self.out_proj(x)
 
-        return x, ilens, new_states
+        if prev_states is None:
+            return x, ilens, None
+        else:
+            return x, ilens, new_states
+        

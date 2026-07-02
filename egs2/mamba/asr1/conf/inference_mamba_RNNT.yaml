@@ -1,0 +1,5 @@
+# The conformer transducer decoding configuration from @jeon30c and adjusted for a smaller beam size
+beam_size: 5
+transducer_conf:
+    search_type: default
+    score_norm: True

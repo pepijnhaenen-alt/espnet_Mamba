@@ -53,7 +53,7 @@ scheduler: warmuplr
 scheduler_conf:
   warmup_steps: 40000
 
-max_epoch: 80
+max_epoch: 10
 resume: false
 batch_type: numel
 batch_bins: 1200000
