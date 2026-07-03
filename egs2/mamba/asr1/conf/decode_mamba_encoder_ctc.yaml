@@ -1,0 +1,20 @@
+# decode_asr_mamba_ctc.yaml
+
+batch_size: 1
+
+beam_size: 20
+
+nbest: 1
+
+ctc_weight: 1.0
+
+lm_weight: 0.0
+
+penalty: 0.0
+
+maxlenratio: 0.0
+minlenratio: 0.0
+
+streaming: false
+
+token_type: bpe

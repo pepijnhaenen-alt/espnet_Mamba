@@ -5,8 +5,7 @@ to ``espnet2.asr.state_spaces.s6`` which wraps the upstream ``mamba_ssm``
 package for both Mamba1 and Mamba2.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
-StreamingState = List[Any]
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 import torch
 import torch.nn as nn
@@ -14,6 +13,10 @@ import torch.nn.functional as F
 
 from espnet2.asr.encoder.abs_encoder import AbsEncoder
 from espnet2.asr.state_spaces.s6 import Mamba1, Mamba2
+
+class StreamingState(TypedDict):
+    mamba: List[Any]
+    conv: List[torch.Tensor]
 
 
 class _CausalDepthwiseConv1d(nn.Module):
@@ -26,14 +29,25 @@ class _CausalDepthwiseConv1d(nn.Module):
         self.act = nn.SiLU()
         self.dropout = nn.Dropout(dropout_rate)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, cache=None) -> torch.Tensor:
         # x: (B, T, C)
         x = x.transpose(1, 2)               # (B, C, T)
-        x = F.pad(x, (self.kernel_size - 1, 0))  # strictly causal (left pad only)
+        if (self.kernel_size-1 <= x.size(2)):
+            next_cache = x[:,:,-(self.kernel_size-1):]
+        else:
+            if cache is None:
+                next_cache = F.pad(x, (self.kernel_size -1 - x.size(2), 0)) #should look into using previous cache instead of zero padding
+            else:
+                next_cache = torch.cat([cache[:,:,-self.kernel_size+1+x.size(2):], x], dim=-1)
+        if cache is None:
+            x = F.pad(x, ((self.kernel_size-1), 0))  # strictly causal (left pad only)
+        else:
+            x = torch.cat([cache, x], dim=-1)
         x = self.conv(x)
+
         x = self.act(x)
         x = self.dropout(x)
-        return x.transpose(1, 2)
+        return x.transpose(1, 2), next_cache
 
 
 class MambaEncoder(AbsEncoder):
@@ -59,7 +73,10 @@ class MambaEncoder(AbsEncoder):
         block_conf: Optional[Dict[str, Any]] = None,
     ):
         super().__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
         self._output_size = output_size
+        self.conv_kernel_size = conv_kernel_size
         self.chunk_size = chunk_size
         self.mamba_type = mamba_type.lower()
 
@@ -141,10 +158,25 @@ class MambaEncoder(AbsEncoder):
         if device is None:
             device = next(self.parameters()).device
 
-        return [
+        block_states = [
             blk.default_state(batch_size=batch_size, device=device)
             for blk in self.blocks
         ]
+
+        conv_states = [
+            torch.zeros(
+                batch_size,
+                self.hidden_size,
+                self.conv_kernel_size -1,
+                device=device
+            )
+            for conv in self.frontend_convs
+        ]
+
+        states = StreamingState()
+        states["mamba"] = block_states
+        states["conv"] = conv_states
+        return states
 
     def forward_chunk(
         self,
@@ -159,22 +191,15 @@ class MambaEncoder(AbsEncoder):
         This method intentionally delegates to forward() so training and
         full-utterance inference behavior remain unchanged.
         """
-        del is_final
-        return self.forward(xs_chunk, ilens, prev_states=prev_states, ctc=ctc)
+        x = self.in_proj(xs_chunk)
 
-    def forward(
-        self,
-        xs_pad: torch.Tensor,
-        ilens: torch.Tensor,
-        prev_states: Optional[StreamingState] = None,
-        ctc=None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
-        x = self.in_proj(xs_pad)
+        conv_states = [None] * len(self.frontend_convs) if prev_states is None else prev_states["conv"]
+        new_conv_states = []
+        for i, conv in enumerate(self.frontend_convs):
+            x, new_conv = conv(x, conv_states[i])
+            new_conv_states.append(new_conv)
 
-        for conv in self.frontend_convs:
-            x = conv(x)
-
-        new_states = None if prev_states is None else prev_states
+        new_states = None if prev_states is None else prev_states["mamba"]
         for i, (blk, ffn) in enumerate(zip(self.blocks, self.ffns)):
 
             # Pre-norm + residual around the Mamba mixer for stable training.
@@ -187,6 +212,54 @@ class MambaEncoder(AbsEncoder):
                 new_states[i] = st
 
             # Pre-norm + residual around the FFN, transformer-style.
+            #x = x_mamba
+            x = x + x_mamba
+            x = x + ffn(self.ffn_norms[i](x))
+
+        x = self.norm_out(x)
+        x = self.out_proj(x)
+
+        no_states_bool = prev_states == None
+
+        if is_final:
+            del prev_states
+            no_states_bool = True
+
+        if no_states_bool:
+            return x, ilens, None
+        else:
+            prev_states["mamba"] = new_states
+            prev_states["conv"] = new_conv_states
+            return x, ilens, prev_states
+
+    def forward(
+        self,
+        xs_pad: torch.Tensor,
+        ilens: torch.Tensor,
+        prev_states: Optional[StreamingState] = None,
+        ctc=None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[List[Any]]]:
+        x = self.in_proj(xs_pad)
+
+        new_conv_states = []
+        for conv in self.frontend_convs:
+            x, conv_state = conv(x)
+            new_conv_states.append(conv_state)
+
+        new_states = None if prev_states is None else prev_states["mamba"]
+        for i, (blk, ffn) in enumerate(zip(self.blocks, self.ffns)):
+
+            # Pre-norm + residual around the Mamba mixer for stable training.
+            x_norm = self.mamba_norms[i](x).contiguous()
+            
+            if prev_states is None:
+                x_mamba, _ = blk(x_norm)
+            else:
+                x_mamba, st = blk(x_norm, state=new_states[i]) #This might break the use of states
+                new_states[i] = st
+
+            # Pre-norm + residual around the FFN, transformer-style.
+            #x = x_mamba
             x = x + x_mamba
             x = x + ffn(self.ffn_norms[i](x))
 
@@ -196,5 +269,7 @@ class MambaEncoder(AbsEncoder):
         if prev_states is None:
             return x, ilens, None
         else:
-            return x, ilens, new_states
+            prev_states["mamba"] = new_states
+            prev_states["conv"] = new_conv_states
+            return x, ilens, prev_states
         

@@ -83,10 +83,20 @@ class Mamba1(SequenceModule):
             # print("state is None")
             y = self.mamba(x)
             return y, None
-    
-        y = self.mamba(x, inference_params = state)
 
-        state.seqlen_offset += x.size(1)
+        try:
+            y = self.mamba(x, inference_params = state)
+            state.seqlen_offset += x.size(1)
+            return y, state
+        except:
+            y_list = []
+            for i in range(x.size()[1]):
+                xi = x[:,i,:]
+                y, state = self.step(xi, state)
+                y = y.unsqueeze(1)
+                y_list.append(y)
+            return torch.cat(y_list, dim=1), state
+        
         # print(state.seqlen_offset)
 
         # y_list = []
@@ -95,7 +105,7 @@ class Mamba1(SequenceModule):
         #     y_list.append(y_t.unsqueeze(1)) 
         # y = torch.cat(y_list, dim=1) # [(B, D)] -> (B, L, D)
 
-        return y, state
+        
 
     def step(self, x, state, **kwargs):
         """Step function for recurrent inference.
@@ -127,13 +137,13 @@ class Mamba1(SequenceModule):
         
         return y, state
 
-    def default_state(self, *batch_shape, device=None, **kwargs):
+    def default_state(self, batch_size:int=1, device=None, **kwargs):
         """Default state for initialization."""
         if device is None:
             device = next(self.parameters()).device
         
         max_seqlen = kwargs.get("max_seqlen", 1024)  # Will be updated as we step
-        max_batch_size=batch_shape[0] if batch_shape else 1
+        max_batch_size= batch_size
         # Create InferenceParams with allocated cache for this layer
         inference_params = InferenceParams(
             max_seqlen = max_seqlen,  # Will be updated as we step

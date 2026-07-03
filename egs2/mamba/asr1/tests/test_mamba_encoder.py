@@ -11,46 +11,60 @@ torch.manual_seed(0)
 
 
 INPUT_DIM = 32
-OUTPUT_DIM = 16
-SEQ_LEN = 200
+OUTPUT_DIM = 32
+SEQ_LEN = 20
 
 TRAIN_SAMPLES = 128
 
-EPOCHS = 2000
+EPOCHS = 500
 
-LR = 1e-3
+LR = 1e-2
+TARGET_MSE = 1e-3
 
 
 def generate_dataset():
 
-    W = torch.randn(INPUT_DIM, OUTPUT_DIM)
+    # W = torch.randn(INPUT_DIM, OUTPUT_DIM)
 
-    b = torch.randn(OUTPUT_DIM)
+    # b = torch.randn(OUTPUT_DIM)
 
     x = torch.randn(TRAIN_SAMPLES, SEQ_LEN, INPUT_DIM)
 
-    # y = (
-    #     0.6 * x +
-    #     0.3 * torch.roll(x, 1, dims=1) +
-    #     0.1 * torch.roll(x, 2, dims=1)
-    # )
+    x_1 = torch.roll(x,1,dims=1)
+    x_1[:,0,:] = 0
 
-    # y[:, :2] = x[:, :2]
+    x_2 = torch.roll(x,2,dims=1)
+    x_2[:,0,:] = 0
+    x_2[:,1,:] = 0
+    
 
-    y = x @ W + b
+    y = (
+        0.6 * x +
+        0.3 * x_1 +
+        0.1 * x_2
+    )
+
+    # y = x @ W + b
 
     return x, y
 
 
 def build_model():
 
+    # Minimal causal Mamba baseline for this synthetic sequence regression task.
     model = MambaEncoder(
         input_size=INPUT_DIM,
         output_size=OUTPUT_DIM,
+        mamba_type="mamba1",
         hidden_size=64,
-        num_blocks=2,
-        linear_units=128,
-        dropout_rate=0.0,
+        num_blocks=1,
+        d_state=8,
+        d_conv=2,
+        expand=1,
+        conv_kernel_size=3,
+        conv_num_layers=1,
+        linear_units=32,
+        dropout_rate=0.00,
     )
 
     return model.to(DEVICE)
@@ -97,7 +111,15 @@ def train():
 
         losses.append(loss.item())
 
-        test_loss = 0
+        if loss.item() < TARGET_MSE:
+            print(
+                f"Epoch {epoch:03d} | "
+                f"Train MSE = {loss.item():.6e} | "
+                f"early stop"
+            )
+            break
+
+        # test_loss = 0
 
         if epoch % 20 == 0:
 
@@ -121,6 +143,7 @@ def train():
                 f"Train MSE = {loss.item():.6e} | "
                 #f"Test MSE = {test_loss:.8e}"
             )
+
 
     print()
 
