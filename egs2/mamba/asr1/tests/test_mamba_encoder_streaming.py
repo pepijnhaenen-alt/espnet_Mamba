@@ -334,24 +334,43 @@ def seed():
     torch.manual_seed(0)
 
 
-@pytest.fixture
-def encoder(device):
-    model = MambaEncoder(
-        input_size=80,
-        output_size=256,
-        hidden_size=64,
-        num_blocks=2,
-        d_state=8,
-        d_conv=4,
-        expand=2,
-        conv_kernel_size=7,
-        conv_num_layers=2,
-        linear_units=128,
-        dropout_rate=0.0,
-    )
-    model.to(device)
-    model.eval()
-    return model
+@pytest.fixture(params=["mamba1", "mamba2"])
+def encoder(request, device):
+    if request.param == "mamba1":
+        model = MambaEncoder(
+            input_size=80,
+            output_size=256,
+            hidden_size=64,
+            num_blocks=2,
+            d_state=8,
+            d_conv=4,
+            expand=2,
+            conv_kernel_size=7,
+            conv_num_layers=2,
+            linear_units=128,
+            dropout_rate=0.0,
+        )
+        model.to(device)
+        model.eval()
+        return model
+    elif request.param == "mamba2":
+        model = MambaEncoder(
+            input_size=80,
+            output_size=256,
+            hidden_size=64,
+            num_blocks=2,
+            d_state=8,
+            d_conv=4,
+            expand=2,
+            conv_kernel_size=7,
+            conv_num_layers=2,
+            linear_units=128,
+            dropout_rate=0.0,
+            mamba_type=request.param
+        )
+        model.to(device)
+        model.eval()
+        return model
 
 
 # -------------------------------------------------------------------------

@@ -40,13 +40,19 @@ encoder_conf:
 
   chunk_size: 0
 
-decoder: null
+decoder: rnn
+decoder_conf:
+  rnn_type: lstm
+  num_layers: 2
+  hidden_size: 512
+  dropout: 0.10
+  sampling_probability: 0.0
 
 ctc_conf:
   dropout_rate: 0.1
 
 model_conf:
-  ctc_weight: 1.0
+  ctc_weight: 0.3
   lsm_weight: 0.0
   length_normalized_loss: false
 
@@ -61,7 +67,7 @@ scheduler: warmuplr
 scheduler_conf:
   warmup_steps: 25000
 
-max_epoch: 10
+max_epoch: 5
 
 resume: true
 

@@ -42,6 +42,12 @@ set -e
 set -u
 set -o pipefail
 
+#old_lang=rian
+nbpe=5000
+pretrain=false
+pt_tag=
+asr_suffix=
+
 # lang=nl
 # train_set="train_cased_cleaned"
 # valid_set="val_cased_cleaned"
@@ -51,12 +57,6 @@ lang=en
 train_set="train_lib360_copy"
 valid_set="dev_lib360"
 test_sets="test_lib360_small"
-
-#old_lang=rian
-nbpe=5000
-pretrain=false
-pt_tag=
-asr_suffix=
 
 exp=exp/baseline/transformer_streaming
 # exp=exp/common_voice
@@ -188,14 +188,12 @@ fi
 ./asr.sh \
            --ngpu 1 \
            --nbpe ${nbpe} \
-           --stage 12 \
+           --stage 11 \
            --stop_stage 13 \
 	   --asr_exp "${LOCAL_ASR_EXP}" \
 	   --nj "${PARALLEL_NJ}" \
 	   --inference_nj "${INFER_NJ}" \
 	   --gpu_inference true \
-           --use_streaming true \
-           --compute_streaming_metrics true \
            --asr_config "${asr_config}" \
            --use_lm false \
 	   --lang ${lang} \

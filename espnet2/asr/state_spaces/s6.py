@@ -142,7 +142,7 @@ class Mamba1(SequenceModule):
         if device is None:
             device = next(self.parameters()).device
         
-        max_seqlen = kwargs.get("max_seqlen", 1024)  # Will be updated as we step
+        max_seqlen = 1  # Will be updated as we step
         max_batch_size= batch_size
         # Create InferenceParams with allocated cache for this layer
         inference_params = InferenceParams(
@@ -308,17 +308,16 @@ class Mamba2(SequenceModule):
         
         return y, state
 
-    def default_state(self, *batch_shape, device=None, **kwargs):
+    def default_state(self, batch_size=1, device=None, **kwargs):
         """Default state for initialization."""
         if device is None:
             device = next(self.parameters()).device
         
-        max_seqlen = kwargs.get("max_seqlen", 1024)  # Will be updated as we step
-        max_batch_size=batch_shape[0] if batch_shape else 1
+        max_seqlen = 1  # Will be updated as we step
         # Create InferenceParams with allocated cache for this layer
         inference_params = InferenceParams(
             max_seqlen = max_seqlen,  # Will be updated as we step
-            max_batch_size= max_batch_size,
+            max_batch_size= batch_size,
         )
         
         # Use layer_idx if set, otherwise assert
@@ -327,7 +326,7 @@ class Mamba2(SequenceModule):
         
         # Allocate cache for this layer
         conv_state, ssm_state = self.mamba2.allocate_inference_cache(
-            batch_size=max_batch_size,
+            batch_size=batch_size,
             max_seqlen=max_seqlen,
             dtype=self.mamba2.conv1d.weight.dtype,
             device=device,
