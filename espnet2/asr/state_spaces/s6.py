@@ -84,18 +84,18 @@ class Mamba1(SequenceModule):
             y = self.mamba(x)
             return y, None
 
-        try:
-            y = self.mamba(x, inference_params = state)
-            state.seqlen_offset += x.size(1)
-            return y, state
-        except:
-            y_list = []
-            for i in range(x.size()[1]):
-                xi = x[:,i,:]
-                y, state = self.step(xi, state)
-                y = y.unsqueeze(1)
-                y_list.append(y)
-            return torch.cat(y_list, dim=1), state
+        # try:
+        #     y = self.mamba(x, inference_params = state)
+        #     state.seqlen_offset += x.size(1)
+        #     return y, state
+        # except:
+        y_list = []
+        for i in range(x.size()[1]):
+            xi = x[:,i,:]
+            y, state = self.step(xi, state)
+            y = y.unsqueeze(1)
+            y_list.append(y)
+        return torch.cat(y_list, dim=1), state
         
         # print(state.seqlen_offset)
 
@@ -232,80 +232,76 @@ class Mamba2(SequenceModule):
     def d_output(self):
         return self.d_model
 
-    def forward(self, x, state=None, **kwargs):
-        """Forward pass.
+    def forward(self, x, state=None):
+        print("Wrapper input:")
+        print("  shape      :", x.shape)
+        print("  stride     :", x.stride())
+        print("  contiguous :", x.is_contiguous())
+        if x.stride(-1) != 1:
+            x = x.contiguous()
+        # x = x.contiguous()
 
-        x: (B, L, D) input tensor
-        Returns: (B, L, D) output tensor, state
-        """
-        # Mamba2 expects (B, L, D)
-        logger = logging.getLogger(__name__)
-        logger.debug("Mamba2.forward: attempting fused call, state present=%s", state is not None)
-        
+        print("After contiguous:")
+        print("  stride     :", x.stride())
+
+        if x.shape[-1] != self.d_model:
+            x = x.transpose(1,2)
+
         if state is None:
-            # # Initialize state if not provided
-            # state = self.default_state(x.shape[0], device=x.device)
-            y_t =self.mamba2(x)
-            return y_t, None
-
-        # Use layer_idx if set, otherwise assert
+            return self.mamba2(x), None
+        
         assert self.layer_idx is not None
-        layer_key = self.layer_idx
-        
-        y_t = self.mamba2(x, inference_params=state) # (B, L, D) -> (B, D)
-        
+
+        y = self.mamba2(
+            x,
+            inference_params=state,
+        )
+
         state.seqlen_offset += x.size(1)
-        
-        return y_t, state
 
-        
-
-    def _forward_fallback_by_step(self, x, state=None):
-        """Fallback forward using recurrent step for portability.
-
-        This path is slower than fused forward but avoids kernel layout
-        constraints in certain causal_conv1d builds.
-        """
-        logger = logging.getLogger(__name__)
-        logger.warning("Mamba2: running _forward_fallback_by_step (slow, per-frame stepping)")
-        if state is None:
-            state = self.default_state(x.shape[0], device=x.device)
-
-        ys = []
-        for t in range(x.shape[1]):
-            y_t, state = self.step(x[:, t, :], state)
-            ys.append(y_t.unsqueeze(1))
-        y = torch.cat(ys, dim=1)
         return y, state
+        
 
-    def step(self, x, state, **kwargs):
-        """Step function for recurrent inference.
+    def step(self, x, state):
+        if x.stride(-1) != 1:
+            x = x.contiguous()
+        # x = x.contiguous()
 
-        x: (B, D) input at current timestep
-        state: InferenceParams object containing the state
-        Returns: (B, D) output, new state
-        """
-        if state is None:
-            # Initialize state if not provided
-            state = self.default_state(x.shape[0], device=x.device)
-        
-        # Use layer_idx if set, otherwise assert
-        assert self.layer_idx is not None
-        layer_key = self.layer_idx
-        
-        # Get states from cache
-        conv_state, ssm_state = state.key_value_memory_dict[layer_key]
-        
-        # mamba_ssm Mamba2.step expects hidden_states with a time axis: (B, 1, D).
-        # x_step = x.unsqueeze(1) if x.dim() == 2 else x
-        y, conv_state, ssm_state = self.mamba2.step(x_step, conv_state, ssm_state)
-        # if y.dim() == 3 and y.size(1) == 1:
-        #     y = y.squeeze(1)
-        
-        # Update the inference params
-        state.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
-        state.seqlen_offset += 1
-        
+        if x.shape[-1] != self.d_model:
+            x = x.transpose(1,2)
+
+        if x.dim() == 2:
+            x = x.unsqueeze(1)
+
+        if self.layer_idx not in state.key_value_memory_dict:
+            conv_state, ssm_state = \
+                self.mamba2.allocate_inference_cache(
+                    batch_size=1,
+                    max_seqlen=1,
+                    dtype=self.mamba2.in_proj.weight.dtype,
+                    device=self.device,
+                    )
+            state.key_value_memory_dict[self.layer_idx] = (
+                conv_state,
+                ssm_state,
+            )
+
+        y, conv_state, ssm_state = self.mamba2.step(
+            x,
+            conv_state,
+            ssm_state,
+        )
+
+        state.key_value_memory_dict[self.layer_idx] = (
+            conv_state,
+            ssm_state,
+        )
+
+        # state.seqlen_offset += 1
+
+        if y.dim() == 3:
+            y = y.squeeze(1)
+
         return y, state
 
     def default_state(self, batch_size=1, device=None, **kwargs):
@@ -313,7 +309,7 @@ class Mamba2(SequenceModule):
         if device is None:
             device = next(self.parameters()).device
         
-        max_seqlen = 1  # Will be updated as we step
+        max_seqlen = kwargs.get("max_seqlen", 4096) # Will be updated as we step
         # Create InferenceParams with allocated cache for this layer
         inference_params = InferenceParams(
             max_seqlen = max_seqlen,  # Will be updated as we step
@@ -328,10 +324,10 @@ class Mamba2(SequenceModule):
         conv_state, ssm_state = self.mamba2.allocate_inference_cache(
             batch_size=batch_size,
             max_seqlen=max_seqlen,
-            dtype=self.mamba2.conv1d.weight.dtype,
+            dtype=self.mamba2.in_proj.weight.dtype,
             device=device,
         )
-        
+
         # Store in the inference params
         inference_params.key_value_memory_dict[layer_key] = (conv_state, ssm_state)
         

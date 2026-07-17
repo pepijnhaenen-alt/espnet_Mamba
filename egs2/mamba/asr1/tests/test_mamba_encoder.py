@@ -55,7 +55,7 @@ def build_model():
     model = MambaEncoder(
         input_size=INPUT_DIM,
         output_size=OUTPUT_DIM,
-        mamba_type="mamba1",
+        mamba_type="mamba2",
         hidden_size=64,
         num_blocks=1,
         d_state=8,

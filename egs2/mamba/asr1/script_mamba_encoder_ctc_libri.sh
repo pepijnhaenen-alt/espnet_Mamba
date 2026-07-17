@@ -158,7 +158,7 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-12} \
+    --stage ${STAGE:-11} \
     --stop_stage ${STOP_STAGE:-16} \
     --audio-format flac \
     --nj "${PARALLEL_NJ}" \
@@ -179,7 +179,5 @@ fi
     --test_sets "${test_sets}" \
     --bpe_train_text "data/${train_set}/text" \
     --expdir "${exp}" \
-    --use_streaming true \
-    --compute_streaming_metrics true \
     "$@"
 

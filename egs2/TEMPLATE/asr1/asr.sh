@@ -168,6 +168,8 @@ asr_speech_fold_length=800 # fold_length for speech data during ASR training.
 asr_text_fold_length=150   # fold_length for text data during ASR training.
 lm_fold_length=150         # fold_length for LM training.
 
+resume=true
+
 help_message=$(cat << EOF
 Usage: $0 --train-set "<train_set_name>" --valid-set "<valid_set_name>" --test_sets "<test_set_names>"
 
@@ -1162,7 +1164,7 @@ if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ] && ! [[ " ${skip_stages} " =~ [
             --valid_data_path_and_name_and_type "${lm_dev_text},text,text" \
             --valid_shape_file "${lm_stats_dir}/valid/text_shape.${lm_token_type}" \
             --fold_length "${lm_fold_length}" \
-            --resume true \
+            --resume ${resume} \
             --output_dir "${lm_exp}" \
             ${_opts} ${lm_args}
 
@@ -1451,7 +1453,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
                 --g2p "${g2p}" \
                 --valid_data_path_and_name_and_type "${_asr_valid_dir}/${_scp},speech,${_type}" \
                 --valid_shape_file "${asr_stats_dir}/valid/speech_shape" \
-                --resume true \
+                --resume "${resume}" \
                 ${pretrained_model:+--init_param $pretrained_model} \
                 --ignore_init_mismatch ${ignore_init_mismatch} \
                 --fold_length "${_fold_length}" \
@@ -1483,7 +1485,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
                 --g2p "${g2p}" \
                 --valid_data_path_and_name_and_type "${_asr_valid_dir}/${_scp},speech,${_type}" \
                 --valid_shape_file "${asr_stats_dir}/valid/speech_shape" \
-                --resume true \
+                --resume "${resume}" \
                 ${pretrained_model:+--init_param $pretrained_model} \
                 --ignore_init_mismatch ${ignore_init_mismatch} \
                 --fold_length "${_fold_length}" \

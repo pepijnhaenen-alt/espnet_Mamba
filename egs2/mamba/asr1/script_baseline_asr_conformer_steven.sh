@@ -97,10 +97,10 @@ echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
 echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
-asr_config=conf/baselines/train_asr_conformer.yaml
+asr_config=conf/baselines/train_asr_conformer_steven.yaml
 inference_config=conf/baselines/decode.yaml
 inference_args="--ctc_weight 0.0"
-inference_asr_model="10epoch.pth" #"valid.acc.best.pth"
+inference_asr_model="valid.acc.best.pth"
 
 if [ "${RUN_ON_SCRATCH:-0}" != "0" ]; then
     if [ -n "${_CONDOR_SCRATCH_DIR:-}" ] && [ -d "${_CONDOR_SCRATCH_DIR}" ]; then
@@ -158,7 +158,7 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-12} \
+    --stage ${STAGE:-10} \
     --stop_stage ${STOP_STAGE:-13} \
     --audio-format flac \
     --nj "${PARALLEL_NJ}" \

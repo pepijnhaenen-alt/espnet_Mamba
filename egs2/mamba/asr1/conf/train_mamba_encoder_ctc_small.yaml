@@ -22,8 +22,8 @@ normalize: null
 encoder: mamba
 encoder_conf:
   output_size: 256
-  hidden_size: 512
-  num_blocks: 12
+  hidden_size: 384
+  num_blocks: 10
 
   mamba_type: mamba1
 
@@ -34,7 +34,7 @@ encoder_conf:
   conv_kernel_size: 15
   conv_num_layers: 2
 
-  linear_units: 2048
+  linear_units: 1024
 
   dropout_rate: 0.10
 
@@ -61,7 +61,7 @@ scheduler: warmuplr
 scheduler_conf:
   warmup_steps: 25000
 
-max_epoch: 40
+max_epoch: 5
 
 resume: true
 

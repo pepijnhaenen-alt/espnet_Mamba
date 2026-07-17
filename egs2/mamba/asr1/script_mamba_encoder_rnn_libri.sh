@@ -98,7 +98,7 @@ echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 echo "parallel config: nj=${PARALLEL_NJ}, inference_nj=${INFER_NJ}"
 
 asr_config=conf/train_mamba_encoder_rnn.yaml
-inference_config=conf/decode_mamba_encoder_rnn_streaming.yaml
+inference_config=conf/decode_mamba_encoder_rnn.yaml
 inference_args="--ctc_weight 0.3"
 inference_asr_model="valid.loss.best.pth" #"valid.acc.best.pth" #This should be adjusted
 
@@ -158,7 +158,7 @@ fi
 ./asr.sh \
     --ngpu ${GPU_COUNT:-1} \
     --nbpe ${nbpe} \
-    --stage ${STAGE:-11} \
+    --stage ${STAGE:-12} \
     --stop_stage ${STOP_STAGE:-13} \
     --audio-format flac \
     --nj "${PARALLEL_NJ}" \

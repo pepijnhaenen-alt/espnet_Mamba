@@ -58,7 +58,7 @@ train_set="train_lib360_copy"
 valid_set="dev_lib360"
 test_sets="test_lib360_small"
 
-exp=exp/baseline/transformer_streaming
+exp=exp/baseline/transformer_streaming/libri
 # exp=exp/common_voice
 
 # Validate binary compatibility of the assigned worker with cuda128 env.
